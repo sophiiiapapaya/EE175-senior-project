@@ -1,49 +1,79 @@
-# server.py
+import cv2
 
-import socket, pickle, struct
-import cv2 as cv
-import numpy
+import socket
 
-# HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
-# # If you pass an empty string, the server will accept connections on all available IPv4 interfaces.
-# PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
+import pickle
+
+import struct
+
+
 
 # Create socket
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 host_name = socket.gethostname()
+
 host_ip = socket.gethostbyname(host_name)
-print('Host IP: ', host_ip)
-PORT = 9999
-WIN_NAME = "Transmitting video"
 
-server_addr = (host_ip, PORT)
-s.bind(server_addr)
-s.listen()
+print('HOST IP:', host_ip)
 
-camera = False
-if camera == True:
-    vid = cv.VideoCapture(0) # video stream
-else:
-    vid = cv.VideoCapture('sample-media\sample-vid-1.mp4') # play video file
+port = 9999
 
-# socket accept
-while True:
-    client_socket, addr = s.accept()
-    print(f'Connected by {addr}')
-    if client_socket:
-        # vid = cv.VideoCapture(0) # Unlike files, the camera has no current position, and CAP_PROP_POS_FRAMES always returns 0
-        cv.namedWindow(WIN_NAME, cv.WND_PROP_FULLSCREEN)
-        cv.setWindowProperty(WIN_NAME, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
-        
-        while (vid.isOpened()):
-            img,frame = vid.read()
-            frame = cv.resize(frame, (1600, 900))
-            cv.moveWindow('Transmitting video', 0, 0)
-            a = pickle.dumps(frame)
-            message = struct.pack("Q", len(a)) + a
-            client_socket.sendall(message)
-            cv.imshow('Transmitting video',frame)
-            key = cv.waitKey(1) & 0xFF
-            if key == ord('q'):
-                client_socket.close()
+socket_address = (host_ip, port)
 
+
+
+# Socket Bind
+
+server_socket.bind(socket_address)
+
+
+
+# Socket Listen
+
+server_socket.listen(5)
+
+print("LISTENING AT:", socket_address)
+
+
+
+# Accept a client connection
+
+client_socket, addr = server_socket.accept()
+
+print('GOT CONNECTION FROM:', addr)
+
+
+
+# Video capture
+
+cap = cv2.VideoCapture(0)
+
+
+
+while cap.isOpened():
+
+    ret, frame = cap.read()
+
+    if not ret:
+
+        break
+
+    # Serialize frame
+
+    data = pickle.dumps(frame)
+
+
+
+    # Send message length first
+
+    message = struct.pack("Q", len(data)) + data
+
+    client_socket.sendall(message)
+
+    
+
+cap.release()
+
+client_socket.close()
