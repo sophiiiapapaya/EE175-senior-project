@@ -5,7 +5,7 @@ import cv2 as cv
 import numpy
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host_ip = '169.235.86.66'
+host_ip = '10.13.27.104'
 PORT = 9999
 s.connect((host_ip, PORT))
 data = b""
