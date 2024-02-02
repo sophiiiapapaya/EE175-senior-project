@@ -20,6 +20,12 @@ server_addr = (host_ip, PORT)
 s.bind(server_addr)
 s.listen()
 
+camera = False
+if camera == True:
+    vid = cv.VideoCapture(0) # video stream
+else:
+    vid = cv.VideoCapture('sample-media\sample-vid-1.mp4') # play video file
+
 # socket accept
 while True:
     client_socket, addr = s.accept()
@@ -28,7 +34,7 @@ while True:
         # vid = cv.VideoCapture(0) # Unlike files, the camera has no current position, and CAP_PROP_POS_FRAMES always returns 0
         cv.namedWindow(WIN_NAME, cv.WND_PROP_FULLSCREEN)
         cv.setWindowProperty(WIN_NAME, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
-        vid = cv.VideoCapture('sample-media\sample-vid-1.mp4')
+        
         while (vid.isOpened()):
             img,frame = vid.read()
             frame = cv.resize(frame, (1600, 900))
