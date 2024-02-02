@@ -14,6 +14,7 @@ host_name = socket.gethostname()
 host_ip = socket.gethostbyname(host_name)
 print('Host IP: ', host_ip)
 PORT = 9999
+WIN_NAME = "Transmitting video"
 
 server_addr = (host_ip, PORT)
 s.bind(server_addr)
@@ -25,7 +26,8 @@ while True:
     print(f'Connected by {addr}')
     if client_socket:
         # vid = cv.VideoCapture(0) # Unlike files, the camera has no current position, and CAP_PROP_POS_FRAMES always returns 0
-        cv.namedWindow('Transmitting video', cv.WINDOW_NORMAL)
+        cv.namedWindow(WIN_NAME, cv.WND_PROP_FULLSCREEN)
+        cv.setWindowProperty(WIN_NAME, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
         vid = cv.VideoCapture('sample-media\sample-vid-1.mp4')
         while (vid.isOpened()):
             img,frame = vid.read()
