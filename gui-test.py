@@ -11,16 +11,20 @@ window = tk.Tk()
 # Frame--container of widgets
 upload_frm = tk.Frame()
 
-# create widget
-greeting = tk.Label(master=upload_frm, text="Click the button below to upload files/folder")
-greeting.pack() # add widget to the window
+# create upload widget
+upload_ln = tk.Label(master=upload_frm, text="Click the button below to upload files/folder")
+upload_ln.pack() # add widget to the window
 
 upload_btn = tk.Button(master=upload_frm, text="Click to upload")
 upload_btn.pack()
 
 upload_frm.pack(fill=tk.BOTH, expand=True)
 
+# Frame--change playback order
+order_frm = tk.Frame()
 
+# Create order widget
+order_des = tk.Label(master=order_frm, text="Media play in the order shown. Move items to change the order")
 
 # Start the application
 window.mainloop() # listens for event (loop)
