@@ -23,7 +23,17 @@ upload_btn = tk.Button(upload_frm, text="Click to upload").pack(padx=20, pady=25
 add_file = tk.Button(upload_frm, text="Add file").pack(padx=20, pady=20)
 upload_frm.pack(side=tk.TOP, expand=True, padx=20, pady=20)
 
-# Frame 3--change playback order
+# Frame--select device
+device_frm = tk.Frame(window, width=180, height=100)
+# device_frm.columnconfigure(0, minsize=250)
+# device_frm.rowconfigure([0, 1], minsize=100)
+device_frm.pack()
+select_label = tk.Label(device_frm, text="Choose the device to control", font=20).grid(row=0, column=0, sticky="w")
+device1 = tk.Button(device_frm, text="device name 1").grid(row=1, column=0) # Receive device names from the same network
+device2 = tk.Button(device_frm, text="device name 2").grid(row=2, column=0) # Receive device names from the same network
+
+
+# Frame 2--change playback order
 order_frm = tk.Frame(master=window) 
 order_label = tk.Label(order_frm, text="Media added", font=20).pack(padx=20, pady=10)
 order_des = tk.Label(order_frm, text="Click to instant play or move items to change the order").pack()
@@ -35,14 +45,13 @@ list_frm.pack(side=tk.LEFT)
 
 order_frm.pack(fill=tk.Y, side=tk.RIGHT, expand=True)
 
-# Frame 2--control panel
+# Frame 3--control panel
 ctrl_frm = tk.Frame(window, height=100)
 ctrl_label = tk.Label(ctrl_frm, text="Control center", font=20).pack(padx=20, pady=10)
 L_light = tk.Button(ctrl_frm, text="Left light").pack(side=tk.LEFT, padx=20, pady=20)
 C_light = tk.Button(ctrl_frm, text="Center light").pack(side=tk.LEFT, padx=20, pady=20)
 R_light = tk.Button(ctrl_frm, text="Right light").pack(side=tk.LEFT, padx=20, pady=20)
 ctrl_frm.pack(side=tk.LEFT,expand=True)
-
 
 # Start the application
 window.mainloop() # listens for event (loop)
