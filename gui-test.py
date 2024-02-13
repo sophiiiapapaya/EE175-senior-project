@@ -1,9 +1,50 @@
 import tkinter as tk
-
+from tkinter import filedialog
+import cv2
+import socket
+import pickle
+import struct
 # create tkinter for --
 #  1. upload files/folder and playback in order
 #  2. change order?
 #  3. control panel with functional buttons (area light, select and play)
+
+#  function to send file
+def send_file(file_path):
+    try:
+        with open(file_path, "rb") as file:
+            #socket
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            host_ip = '10.13.26.224'
+            port = 9999
+
+            client_socket.connect((host_ip, port))
+
+            data = file.read()
+            data_serialized = pickle.dumps(data)
+
+            client_socket.sendall(struct.pack("Q", len(data_serialized)))
+            client_socket.sendall(data_serialized)
+
+            print("File sent successfully")
+
+            client_socket.close()
+    except Exception as e:
+        print("Error sending file", e)
+
+# function for add file button
+def add_file():
+    file_path = filedialog.askopenfilename()
+    if file_path:
+        print("Selected file: ", file_path)
+# function for upload file button
+def upload_file():
+    file_path = filedialog.askopenfilename()
+    if file_path:
+        send_file(file_path)
+        
+
+    
 
 # create window
 window = tk.Tk()
@@ -19,8 +60,8 @@ upload_frm = tk.Frame(
 )
 # create upload widget
 upload_ln = tk.Label(upload_frm, text="Click the button below to upload files/folder").pack(padx=20, pady=10) # add widget to the window
-upload_btn = tk.Button(upload_frm, text="Click to upload").pack(padx=20, pady=25)
-add_file = tk.Button(upload_frm, text="Add file").pack(padx=20, pady=20)
+upload_btn = tk.Button(upload_frm, text="Click to upload", command=upload_file).pack(padx=20, pady=25)
+add_file_btn = tk.Button(upload_frm, text="Add file", command=add_file).pack(padx=20, pady=20)
 upload_frm.pack(side=tk.TOP, expand=True, padx=20, pady=20)
 
 # Frame--select device

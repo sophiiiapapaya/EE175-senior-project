@@ -9,7 +9,7 @@ import struct
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # host_ip = '192.168.1.100'  # Change SERVER_IP to the server's IP address
 
-host_ip = '169.235.86.66'
+host_ip = '10.13.26.224'
 port = 9999
 
 client_socket.connect((host_ip, port))
