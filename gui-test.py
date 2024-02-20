@@ -1,75 +1,110 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
+import os
+import socket
+import pickle
+import struct
 
-# create tkinter for --
-#  1. upload files/folder and playback in order
-#  2. change order?
-#  3. control panel with functional buttons (area light, select and play)
-#  4. Select device
+class FileStorage:
+    def __init__(self):
+        self.files = []
 
-# create window
-window = tk.Tk()
-window.title('Smart mirror')
+    def add_file(self, file_path):
+        if os.path.exists(file_path):
+            self.files.append(file_path)
+            return True
+        else:
+            return False
 
-# Frame 1--container of widgets
-upload_frm = tk.Frame(
-    window, 
-    width=180, 
-    height=100, 
-    highlightthickness=2, 
-    highlightbackground="black"
-)
+    def delete_file(self, index):
+        del self.files[index]
 
+    def get_files(self):
+        return self.files
 
-# create upload widget
-# Function for opening the 
-# file explorer window
-def browseFiles():
-    filename = filedialog.askopenfilename(initialdir = "/",
-                                          title = "Select a File",
-                                          filetypes = (("Text files",
-                                                        "*.txt*"),
-                                                       ("all files",
-                                                        "*.*")))
-      
-    # Change label contents
-    label_file_explorer.configure(text="File Opened: "+filename)
+class GUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("File Upload and Playback GUI")
+        self.file_storage = FileStorage()
 
-label_file_explorer = tk.Label(upload_frm, text="Click the button below to upload files").pack(padx=20, pady=10)
-upload_btn = tk.Button(upload_frm, text="Browse Files").pack(padx=20, pady=25)
-add_file = tk.Button(upload_frm, text="Add file", command=browseFiles).pack(padx=20, pady=20)
-upload_frm.pack(side=tk.TOP, expand=True, padx=20, pady=20)
+        self.setup_ui()
 
-# Frame--select device
-device_frm = tk.Frame(window, width=180, height=100)
-# device_frm.columnconfigure(0, minsize=250)
-# device_frm.rowconfigure([0, 1], minsize=100)
-device_frm.pack()
-select_label = tk.Label(device_frm, text="Choose the device to control", font=20).grid(row=0, column=0, sticky="w")
-device1 = tk.Button(device_frm, text="device name 1").grid(row=1, column=0) # Receive device names from the same network
-device2 = tk.Button(device_frm, text="device name 2").grid(row=2, column=0) # Receive device names from the same network
+    def setup_ui(self):
+        self.frame = tk.Frame(self.root)
+        self.frame.pack(pady=20)
 
+        self.entry = tk.Entry(self.frame, width=50)
+        self.entry.pack(side=tk.LEFT)
 
-# Frame 2--change playback order
-order_frm = tk.Frame(master=window) 
-order_label = tk.Label(order_frm, text="Media added", font=20).pack(padx=20, pady=10)
-order_des = tk.Label(order_frm, text="Click to instant play or move items to change the order").pack()
-list_frm = tk.Frame(order_frm)
-title1 = tk.Button(list_frm, relief=tk.FLAT, text="1. Video 1.{media_type}", fg="blue")
-length_1 = tk.Label(list_frm, text="03:10").pack(side=tk.RIGHT)
-title1.pack(pady=10)
-list_frm.pack(side=tk.LEFT)
+        self.browse_button = tk.Button(self.frame, text="Browse Files", command=self.browse_files)
+        self.browse_button.pack(side=tk.LEFT)
 
-order_frm.pack(fill=tk.Y, side=tk.RIGHT, expand=True)
+        self.media_frame = tk.Frame(self.root)
+        self.media_frame.pack(pady=20)
 
-# Frame 3--control panel
-ctrl_frm = tk.Frame(window, height=100)
-ctrl_label = tk.Label(ctrl_frm, text="Control center", font=20).pack(padx=20, pady=10)
-L_light = tk.Button(ctrl_frm, text="Left light").pack(side=tk.LEFT, padx=20, pady=20)
-C_light = tk.Button(ctrl_frm, text="Center light").pack(side=tk.LEFT, padx=20, pady=20)
-R_light = tk.Button(ctrl_frm, text="Right light").pack(side=tk.LEFT, padx=20, pady=20)
-ctrl_frm.pack(side=tk.LEFT,expand=True)
+        self.media_label = tk.Label(self.media_frame, text="Media Files")
+        self.media_label.pack()
 
-# Start the application
-window.mainloop() # listens for event (loop)
+        self.listbox = tk.Listbox(self.media_frame, width=50)
+        self.listbox.pack()
 
+        self.add_button = tk.Button(self.root, text="Add File", command=self.add_file)
+        self.add_button.pack(pady=10)
+
+        self.delete_button = tk.Button(self.root, text="Delete File", command=self.delete_file)
+        self.delete_button.pack(pady=10)
+
+        self.send_button = tk.Button(self.root, text="Send File to Server", command=self.send_file)
+        self.send_button.pack(pady=10)
+
+    def browse_files(self):
+        filename = filedialog.askopenfilename(initialdir="/", title="Select File",
+                                              filetypes=(("All Files", "*.*"), ("Text Files", "*.txt")))
+        self.entry.delete(0, tk.END)
+        self.entry.insert(tk.END, filename)
+
+    def add_file(self):
+        file_path = self.entry.get()
+        if file_path:
+            if self.file_storage.add_file(file_path):
+                self.listbox.insert(tk.END, file_path)
+            else:
+                messagebox.showerror("Error", "File not found!")
+
+    def delete_file(self):
+        selection = self.listbox.curselection()
+        if selection:
+            index = selection[0]
+            self.listbox.delete(index)
+            self.file_storage.delete_file(index)
+
+    def send_file(self):
+        selection = self.listbox.curselection()
+        if selection:
+            index = selection[0]
+            file_path = self.file_storage.get_files()[index]
+            self.send_to_server(file_path)
+        else:
+            messagebox.showwarning("Warning", "Please select a file to send!")
+
+    def send_to_server(self, file_path):
+        try:
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client_socket.connect(('192.168.1.6', 9999))
+
+            with open(file_path, 'rb') as file:
+                file_data = file.read()
+                file_size = len(file_data)
+                message = struct.pack("Q", file_size) + file_data
+                client_socket.sendall(message)
+
+            client_socket.close()
+            print(f"File {file_path} sent successfully to the server.")
+        except Exception as e:
+            print(f"Error occurred while sending file {file_path}: {e}")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    gui = GUI(root)
+    root.mainloop()
