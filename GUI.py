@@ -135,6 +135,10 @@ class GUI:
             index = selection[0]
             file_path = self.file_storage.get_files()[index]
             self.send_to_device(file_path)
+            # testing purpose:
+            print(selection)
+            print(file_path)
+            
             self.listbox_uploaded.insert(tk.END, file_path)
             # update playback list
             file_name, file_type = self.get_filename_ext(file_path, index)
@@ -173,7 +177,7 @@ class GUI:
         selection = self.listbox_uploaded.curselection()
         if selection:
             index = selection[0]
-            self.listbox_added.insert(tk.END, file_path) # add file back to listbox_added
+            self.listbox_added.insert(tk.END, selection) # add file back to listbox_added
             # delete from uploaded and add to listbox_added
             self.listbox_uploaded.delete(index)
             self.pb_list.delete(index)
@@ -196,15 +200,17 @@ class GUI:
         # # self.style.theme_use('classic')
         # style.configure("Vertical.TScrollbar", troughcolor="white", background="green", bordercolor="red", arrowcolor="white")
 
+         #Adding transparent background property
+        
         self.pb_list = tk.Listbox(self.pb_list_frm, 
                                   borderwidth=0, 
                                   highlightthickness=0, # remove listbox border
                                   relief=tk.FLAT, # Default: SUNKEN
                                   font=self.list_font, 
                                   fg="darkviolet", # Font color
-                                  bg='systemTransparent', # Transparent bg
                                   cursor="hand2") 
         self.pb_list.bind('<Double-Button-1>')
+        # self.pb_list.attributes('-alpha',0.5)
         self.pb_list.pack(side=tk.LEFT)
         self.pb_scroll = ttk.Scrollbar(self.pb_list_frm, style="Vertical.TScrollbar") # Define scrollbar
         self.pb_scroll.pack(side=tk.RIGHT, fill=tk.BOTH) 
