@@ -172,7 +172,10 @@ class GUI:
                 with open(file_path, "rb") as file:
                     #socket
                     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    host_ip = '10.13.26.224' # localhost
+                    host_name = socket.gethostname() # localhost
+                    host_ip = socket.gethostbyname(host_name)
+                    print(f'{host_name} HOST IP: {host_ip}')
+                    # host_ip = '10.13.26.224' # localhost
                     port = 9999
 
                     client_socket.connect((host_ip, port))
