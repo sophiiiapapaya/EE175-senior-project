@@ -119,14 +119,13 @@ class GUI:
                  ('image files', '*.png *.jpeg *.jpg'),
                  ('all files', '*.*')
                 )
-        file_path = fd.askopenfilename(initialdir="/", 
+        file_path = fd.askopenfilenames(initialdir="/", 
                                        title="Select File",
                                        filetypes=filetype)
         # Change label contents
         if file_path:
             if self.local_file.add_file(file_path): # True if file_path appended to local_file 
                 self.listbox_added.insert(tk.END, file_path)
-                
                 self.instructions.configure(text="File(s) added to the list. ", fg="darkviolet") # for multi file selection
             else:
                 messagebox.showerror("Error", "No files selected or file not found!")
@@ -135,11 +134,12 @@ class GUI:
         # self.entry.insert(tk.END, filename)
 
     def remove_file(self):
+        # Remove from local storage
         selection = self.listbox_added.curselection()
         if selection:
             index = selection[0]
-            self.listbox_added.delete(index)
-            self.local_file.delete_file(index)
+            self.listbox_added.delete(index) # Delete from listbox
+            self.local_file.delete_file(index) # Delete from storage
             self.instructions.configure(text="File removed from the storage. ",fg="darkviolet")
         else:
             messagebox.showwarning("Warning", "Please select a file to remove!")
@@ -150,19 +150,13 @@ class GUI:
         if selection:
             index = selection[0]
             file_path = self.local_file.get_files()[index]
-            # testing purpose:
-            print(selection)
-            print(file_path)
             
             if self.cloud_file.add_file(file_path): # True if file_path appended to cloud_file 
                 # self.send_to_device(file_path)
                 self.listbox_cloud.insert(tk.END, file_path)
-                
                 # update playback list
-                file_name, file_type = self.get_filename_ext(file_path, index)
+                file_name, file_type = self.get_filename_ext(file_path, index) # shortened to filename.ext
                 self.pb_list.insert(tk.END, f" {file_name}.{file_type}")
-            
-                self.listbox_added.delete(index)
                 self.instructions.configure(text="File sent to the device. ",fg="darkviolet")
             else:
                 messagebox.showwarning("Warning", "File did not send!")
@@ -194,14 +188,14 @@ class GUI:
 
     # Add: move selected files from right listbox to left listbox
     def delete_file(self):
+        # Remove from cloud storage
         selection = self.listbox_cloud.curselection()
         if selection:
             index = selection[0]
-            file_path = self.cloud_file.get_files()[index] 
-            self.listbox_added.insert(tk.END, file_path) # add file back to listbox_added
-            # delete from cloud and add to listbox_added
-            self.listbox_cloud.delete(index)
-            self.pb_list.delete(index)
+            # file_path = self.cloud_file.get_files()[index] 
+            self.listbox_cloud.delete(index) # delete from cloud listbox
+            self.cloud_file.delete_file(index) # delete from cloud
+            self.pb_list.delete(index) # add to listbox_added
             self.instructions.configure(text="File removed from device. ", fg="darkviolet")
         else:
             messagebox.showwarning("Warning", "Please select a file to remove from uploads!")
@@ -221,7 +215,7 @@ class GUI:
         # # self.style.theme_use('classic')
         # style.configure("Vertical.TScrollbar", troughcolor="white", background="green", bordercolor="red", arrowcolor="white")
 
-         #Adding transparent background property
+        #Adding transparent background property
         
         self.pb_list = tk.Listbox(self.pb_list_frm, 
                                   borderwidth=0, 
@@ -230,12 +224,12 @@ class GUI:
                                   font=self.list_font, 
                                   fg="darkviolet", # Font color
                                   cursor="hand2") 
-        self.pb_list.bind('<Double-Button-1>')
+        self.pb_list.bind('<Double-Button-1>') # double-click add command
         # self.pb_list.attributes('-alpha',0.5)
         self.pb_list.pack(side=tk.LEFT)
         self.pb_scroll = ttk.Scrollbar(self.pb_list_frm, style="Vertical.TScrollbar") # Define scrollbar
         self.pb_scroll.pack(side=tk.RIGHT, fill=tk.BOTH) 
-        self.pb_list.config(yscrollcommand=self.pb_scroll.set)  # Link
+        self.pb_list.config(yscrollcommand=self.pb_scroll.set)  # Link scrollbar with listbox
         self.pb_scroll.config(command=self.pb_list.yview) # Scrollability
 
         self.pb_btn_frm = tk.Frame(self.frame2)
