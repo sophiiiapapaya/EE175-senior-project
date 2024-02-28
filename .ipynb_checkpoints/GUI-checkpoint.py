@@ -119,8 +119,7 @@ class GUI:
                  ('image files', '*.png *.jpeg *.jpg'),
                  ('all files', '*.*')
                 )
-        file_path = fd.askopenfilenames(initialdir="/", 
-                                       title="Select File",
+        file_path = fd.askopenfilenames(title="Select File(s)",
                                        filetypes=filetype)
         # Change label contents
         if file_path:
