@@ -87,7 +87,7 @@ class GUI:
         self.added_files_frm.pack(pady=20, side=tk.LEFT)
         self.added_files_label = tk.Label(self.added_files_frm, text="Media Files Added")
         self.added_files_label.pack()
-        self.listbox_added = tk.Listbox(self.added_files_frm, width=50)
+        self.listbox_added = tk.Listbox(self.added_files_frm, width=50, selectmode = "multiple")
         self.listbox_added.pack(pady=10, side=tk.LEFT, fill=tk.BOTH)
         self.list_added_scroll = tk.Scrollbar(self.added_files_frm)
         self.list_added_scroll.pack(side=tk.RIGHT, fill=tk.BOTH) 
@@ -107,7 +107,7 @@ class GUI:
         self.cloud_files_frm.pack(pady=20, side=tk.LEFT)
         self.cloud_files_label = tk.Label(self.cloud_files_frm, text="Media Files Uploaded")
         self.cloud_files_label.pack()
-        self.listbox_cloud = tk.Listbox(self.cloud_files_frm, width=50)
+        self.listbox_cloud = tk.Listbox(self.cloud_files_frm, width=50, selectmode = "multiple")
         self.listbox_cloud.pack(pady=10, side=tk.LEFT, fill=tk.BOTH)
         self.list_cloud_scroll = tk.Scrollbar(self.cloud_files_frm)
         self.list_cloud_scroll.pack(side=tk.RIGHT, fill=tk.BOTH) 
@@ -119,47 +119,53 @@ class GUI:
                  ('image files', '*.png *.jpeg *.jpg'),
                  ('all files', '*.*')
                 )
-        file_path = fd.askopenfilenames(initialdir="/", 
-                                       title="Select File",
-                                       filetypes=filetype)
-        # Change label contents
-        if file_path:
-            if self.local_file.add_file(file_path): # True if file_path appended to local_file 
-                self.listbox_added.insert(tk.END, file_path)
-                self.instructions.configure(text="File(s) added to the list. ", fg="darkviolet") # for multi file selection
-            else:
-                messagebox.showerror("Error", "No files selected or file not found!")
+        # multiple file selections (single file: fd.askopenfilename())
+        file_paths = fd.askopenfilenames(title="Select File(s)",
+                                        filetypes=filetype,
+                                        defaultextension='*.*')
+        if file_paths:
+            # save files to local_file and insert to listbox
+            for file_path in file_paths:
+                if self.local_file.add_file(file_path): # True if file_path appended to local_file 
+                    self.listbox_added.insert(tk.END, file_path)
+            self.instructions.configure(text="File(s) added to the list. ", fg="darkviolet") # for multi file selection
+        # else:
+        #     messagebox.showerror("Error", "No files selected or file not found!")
+            
         # Below lines used when a Entry box needed
         # self.entry.delete(0, tk.END)
         # self.entry.insert(tk.END, filename)
 
     def remove_file(self):
         # Remove from local storage
-        selection = self.listbox_added.curselection()
-        if selection:
-            index = selection[0]
-            self.listbox_added.delete(index) # Delete from listbox
-            self.local_file.delete_file(index) # Delete from storage
+        select_indices = self.listbox_added.curselection()
+        if select_indices:
+            for index in reversed(select_indices):
+                # Ensure index is within valid range
+                if 0 <= index < self.listbox_added.size():
+                    self.listbox_added.delete(index) # Delete from listbox
+                    self.local_file.delete_file(index) # Delete from storage            
             self.instructions.configure(text="File removed from the storage. ",fg="darkviolet")
         else:
             messagebox.showwarning("Warning", "Please select a file to remove!")
         
     # Select file from added list and send to server
     def send_file(self):
-        selection = self.listbox_added.curselection()
-        if selection:
-            index = selection[0]
-            file_path = self.local_file.get_files()[index]
+        select_indices = self.listbox_added.curselection()
+        if select_indices:
+            for index in select_indices: 
+                file_path = self.local_file.get_files()[index]
             
-            if self.cloud_file.add_file(file_path): # True if file_path appended to cloud_file 
-                # self.send_to_device(file_path)
-                self.listbox_cloud.insert(tk.END, file_path)
-                # update playback list
-                file_name, file_type = self.get_filename_ext(file_path, index) # shortened to filename.ext
-                self.pb_list.insert(tk.END, f" {file_name}.{file_type}")
-                self.instructions.configure(text="File sent to the device. ",fg="darkviolet")
-            else:
-                messagebox.showwarning("Warning", "File did not send!")
+                if self.cloud_file.add_file(file_path): # True if file_path appended to cloud_file 
+                    # self.send_to_device(file_path)
+                    self.listbox_cloud.insert(tk.END, file_path)
+                    # update playback list
+                    file_name, file_type = self.get_filename_ext(file_path, index) # shortened to filename.ext
+                    self.pb_list.insert(tk.END, f" {file_name}.{file_type}")
+                else:
+                    messagebox.showwarning("Warning", "File did not send!")
+
+            self.instructions.configure(text="File(s) sent to the device. ",fg="darkviolet")
         else:
             messagebox.showwarning("Warning", "Please select a file to send!")
 
@@ -189,13 +195,14 @@ class GUI:
     # Add: move selected files from right listbox to left listbox
     def delete_file(self):
         # Remove from cloud storage
-        selection = self.listbox_cloud.curselection()
-        if selection:
-            index = selection[0]
-            # file_path = self.cloud_file.get_files()[index] 
-            self.listbox_cloud.delete(index) # delete from cloud listbox
-            self.cloud_file.delete_file(index) # delete from cloud
-            self.pb_list.delete(index) # add to listbox_added
+        select_indices = self.listbox_cloud.curselection()
+        if select_indices:
+            for index in reversed(select_indices):
+                # Ensure index is within valid range
+                if 0 <= index < self.listbox_cloud.size():
+                    self.listbox_cloud.delete(index)  # Delete from cloud listbox
+                    self.cloud_file.delete_file(index)  # Delete from cloud_file
+                    self.pb_list.delete(index)  # Delete from playback list
             self.instructions.configure(text="File removed from device. ", fg="darkviolet")
         else:
             messagebox.showwarning("Warning", "Please select a file to remove from uploads!")
