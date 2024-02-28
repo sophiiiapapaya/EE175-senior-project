@@ -280,7 +280,7 @@ class GUI:
         self.pause_resume_btn.pack(pady=10, padx=10, side=tk.LEFT)
         # self.play = tk.Button(self.btn_frm, text='Play from beginning', cursor="hand2", command=self.play_from_beginning)
         self.play = customtkinter.CTkButton(self.btn_frm, 
-                                            text='Play selection', 
+                                            text='Play selection from beginning', 
                                             image=self.start_img, 
                                             cursor="hand2",
                                             text_color="#000000", 
