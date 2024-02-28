@@ -62,35 +62,36 @@ class GUI:
             
     def manage_file_ui(self):
         self.frame1 = tk.Frame(self.root)
-        self.frame1.pack(pady=20, padx=20, side=tk.LEFT)
+        # self.frame1.grid(row=0, column=0,pady=20, padx=20, sticky='nswe')
+        self.frame1.pack(pady=20, padx=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         self.title_font = tk.font.Font(size=20)
         self.manage_title = tk.Label(self.frame1, text="Manage File", font=self.title_font)
-        self.manage_title.grid(row=0, column=0)
+        self.manage_title.pack(side=tk.TOP)
         self.instructions = tk.Label(self.frame1, text="Click the button below to upload files")
-        self.instructions.grid(row=1, column=0, sticky="w")
+        self.instructions.pack(padx=20, side=tk.TOP, anchor="nw")
 
         # self.entry = tk.Entry(self.frame, width=50)
         # self.entry.pack(side=tk.LEFT)
 
         self.action_frm = tk.Frame(self.frame1)
-        self.action_frm.grid(row=2, column=0, sticky='w')
+        self.action_frm.pack(padx=10, side=tk.TOP, anchor='nw')
         self.browse_button = tk.Button(self.action_frm, text="Browse", command=self.browse_files)
-        self.browse_button.pack(pady=10, side=tk.LEFT)
+        self.browse_button.pack(pady=10, padx=10, side=tk.LEFT)
         self.remove_button = tk.Button(self.action_frm, text="Remove", command=self.remove_file)
-        self.remove_button.pack(pady=10, side=tk.LEFT)
+        self.remove_button.pack(pady=10, padx=10,side=tk.LEFT)
 
         self.files_frm = tk.Frame(self.frame1)
-        self.files_frm.grid(row=3, column=0)
+        self.files_frm.pack(pady=20, padx=20, side=tk.TOP, fill=tk.BOTH, expand=True)
         
         self.added_files_frm = tk.Frame(self.files_frm)
-        self.added_files_frm.pack(pady=20, side=tk.LEFT)
+        self.added_files_frm.pack(pady=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.added_files_label = tk.Label(self.added_files_frm, text="Media Files Added")
         self.added_files_label.pack()
         self.listbox_added = tk.Listbox(self.added_files_frm, width=50, selectmode = "multiple")
-        self.listbox_added.pack(pady=10, side=tk.LEFT, fill=tk.BOTH)
-        self.list_added_scroll = tk.Scrollbar(self.added_files_frm)
-        self.list_added_scroll.pack(side=tk.RIGHT, fill=tk.BOTH) 
+        self.listbox_added.pack(pady=10, side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.list_added_scroll = ttk.Scrollbar(self.added_files_frm, style="Vertical.TScrollbar")
+        self.list_added_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
         self.listbox_added.config(yscrollcommand=self.list_added_scroll.set) 
         self.list_added_scroll.config(command=self.listbox_added.yview) 
 
@@ -100,17 +101,15 @@ class GUI:
         self.send_button.pack(pady=10)
         self.delete_button = tk.Button(self.send_remove_frm, text="Remove from server", command=self.delete_file)
         self.delete_button.pack(pady=10)
-        # self.add_button = tk.Button(self.root, text="Add File", command=self.add_file)
-        # self.add_button.pack(pady=10)
 
         self.cloud_files_frm = tk.Frame(self.files_frm)
-        self.cloud_files_frm.pack(pady=20, side=tk.LEFT)
+        self.cloud_files_frm.pack(pady=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.cloud_files_label = tk.Label(self.cloud_files_frm, text="Media Files Uploaded")
         self.cloud_files_label.pack()
         self.listbox_cloud = tk.Listbox(self.cloud_files_frm, width=50, selectmode = "multiple")
-        self.listbox_cloud.pack(pady=10, side=tk.LEFT, fill=tk.BOTH)
-        self.list_cloud_scroll = tk.Scrollbar(self.cloud_files_frm)
-        self.list_cloud_scroll.pack(side=tk.RIGHT, fill=tk.BOTH) 
+        self.listbox_cloud.pack(pady=10, side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.list_cloud_scroll = ttk.Scrollbar(self.cloud_files_frm, style="Vertical.TScrollbar")
+        self.list_cloud_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
         self.listbox_cloud.config(yscrollcommand=self.list_cloud_scroll.set) 
         self.list_cloud_scroll.config(command=self.listbox_cloud.yview)
 
@@ -129,8 +128,6 @@ class GUI:
                 if self.local_file.add_file(file_path): # True if file_path appended to local_file 
                     self.listbox_added.insert(tk.END, file_path)
             self.instructions.configure(text="File(s) added to the list. ", fg="darkviolet") # for multi file selection
-        # else:
-        #     messagebox.showerror("Error", "No files selected or file not found!")
             
         # Below lines used when a Entry box needed
         # self.entry.delete(0, tk.END)
@@ -161,7 +158,7 @@ class GUI:
                     self.listbox_cloud.insert(tk.END, file_path)
                     # update playback list
                     file_name, file_type = self.get_filename_ext(file_path, index) # shortened to filename.ext
-                    self.pb_list.insert(tk.END, f" {file_name}.{file_type}")
+                    self.pb_list.insert(tk.END, f"{file_name}.{file_type}")
                 else:
                     messagebox.showwarning("Warning", "File did not send!")
 
@@ -175,7 +172,10 @@ class GUI:
                 with open(file_path, "rb") as file:
                     #socket
                     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    host_ip = '10.13.26.224' # localhost
+                    host_name = socket.gethostname() # localhost
+                    host_ip = socket.gethostbyname(host_name)
+                    print(f'{host_name} HOST IP: {host_ip}')
+                    # host_ip = '10.13.26.224' # localhost
                     port = 9999
 
                     client_socket.connect((host_ip, port))
@@ -209,13 +209,14 @@ class GUI:
         
     def playback_ui(self):
         self.frame2 = tk.Frame(self.root)
-        self.frame2.pack(pady=20, padx=20, side=tk.LEFT)
+        self.frame2.pack(pady=20, padx=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         self.playback_title = tk.Label(self.frame2, text="Double-click to play.\n Click on PAUSE to pause the media. ")
-        self.playback_title.grid(row=0, column=0)
+        self.playback_title.pack(side=tk.TOP)
 
         self.pb_list_frm = tk.Frame(self.frame2)
-        self.pb_list_frm.grid(row=1, column=0)
+        self.pb_list_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        
         # Listbox properties
         self.list_font = tk.font.Font(family="Laksaman")
         # style = ttk.Style()
@@ -223,7 +224,6 @@ class GUI:
         # style.configure("Vertical.TScrollbar", troughcolor="white", background="green", bordercolor="red", arrowcolor="white")
 
         #Adding transparent background property
-        
         self.pb_list = tk.Listbox(self.pb_list_frm, 
                                   borderwidth=0, 
                                   highlightthickness=0, # remove listbox border
@@ -233,16 +233,19 @@ class GUI:
                                   cursor="hand2") 
         self.pb_list.bind('<Double-Button-1>') # double-click add command
         # self.pb_list.attributes('-alpha',0.5)
-        self.pb_list.pack(side=tk.LEFT)
+        self.pb_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.pb_scroll = ttk.Scrollbar(self.pb_list_frm, style="Vertical.TScrollbar") # Define scrollbar
-        self.pb_scroll.pack(side=tk.RIGHT, fill=tk.BOTH) 
+        self.pb_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
         self.pb_list.config(yscrollcommand=self.pb_scroll.set)  # Link scrollbar with listbox
         self.pb_scroll.config(command=self.pb_list.yview) # Scrollability
+        
+        self.pause_btn = tk.Button(self.frame2, text="PAUSE", cursor="hand2")
+        self.pause_btn.pack(pady=10, side=tk.TOP, anchor='nw')
 
-        self.pb_btn_frm = tk.Frame(self.frame2)
-        self.pb_btn_frm.grid(row=2, column=0, sticky="e")
-        self.pause_btn = tk.Button(self.pb_btn_frm, text="PAUSE", cursor="hand2")
-        self.pause_btn.pack(pady=10, side=tk.RIGHT)
+        # Key descriptions
+        keys_list = """Keys:\n \'s\' for stop\n \'q\' for black screen\n \'p\' for resume to last play"""
+        self.keys_usage = tk.Label(self.frame2, text=keys_list, justify=tk.LEFT)
+        self.keys_usage.pack(side=tk.TOP, anchor='nw')
 
     def get_filename_ext(self, file_path, index):
         # Extract file names and extensions from paths
