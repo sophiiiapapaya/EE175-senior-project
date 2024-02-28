@@ -63,11 +63,11 @@ class GUI:
         # self.server_socket = server.Server_Socket()
         # self.server_socket.connect_client()
 
+        self.paused = True # initial state: all paused
         self.button_img()
         self.manage_file_ui()
         self.playback_ui()
-
-        self.paused = True # initial state: all paused
+        self.control_ui()
 
     def button_img(self):
         self.color = {
@@ -83,7 +83,9 @@ class GUI:
         self.stream_img = ImageTk.PhotoImage(Image.open('assets/stream-img.png').resize((20,20), Image.LANCZOS))
     
     def manage_file_ui(self):
-        self.frame1 = tk.Frame(self.root)
+        self.section1 = tk.Frame(self.root)
+        self.section1.pack(side=tk.TOP)
+        self.frame1 = tk.Frame(self.section1)
         # self.frame1.grid(row=0, column=0,pady=20, padx=20, sticky='nswe')
         self.frame1.pack(pady=20, padx=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
 
@@ -98,9 +100,25 @@ class GUI:
 
         self.action_frm = tk.Frame(self.frame1)
         self.action_frm.pack(padx=10, side=tk.TOP, anchor='nw')
-        self.browse_button = tk.Button(self.action_frm, text="Browse", command=self.browse_files)
+        # self.browse_button = tk.Button(self.action_frm, text="Browse", command=self.browse_files)
+        self.browse_button = customtkinter.CTkButton(self.action_frm, 
+                                                        text="Browse", 
+                                                        cursor="hand2", 
+                                                        command=self.browse_files, 
+                                                        text_color="#000000", 
+                                                        fg_color="transparent", 
+                                                        hover_color=self.color["orange"], 
+                                                        border_width=1)
         self.browse_button.pack(pady=10, padx=10, side=tk.LEFT)
-        self.remove_button = tk.Button(self.action_frm, text="Remove", command=self.remove_file)
+        # self.remove_button = tk.Button(self.action_frm, text="Remove", command=self.remove_file)
+        self.remove_button = customtkinter.CTkButton(self.action_frm, 
+                                                        text="Remove", 
+                                                        cursor="hand2", 
+                                                        command=self.remove_file, 
+                                                        text_color="#000000", 
+                                                        fg_color="transparent", 
+                                                        hover_color=self.color["orange"], 
+                                                        border_width=1)
         self.remove_button.pack(pady=10, padx=10,side=tk.LEFT)
 
         self.files_frm = tk.Frame(self.frame1)
@@ -235,7 +253,7 @@ class GUI:
         return file_name, file_type
         
     def playback_ui(self):
-        self.frame2 = tk.Frame(self.root)
+        self.frame2 = tk.Frame(self.section1)
         self.frame2.pack(pady=20, padx=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         self.status = tk.Label(self.frame2, text="Not playing", fg="darkviolet")
@@ -276,17 +294,19 @@ class GUI:
                                                         text_color="#000000", 
                                                         fg_color="transparent", 
                                                         hover_color=self.color["orange"], 
-                                                        border_width=1)
+                                                        border_width=1,
+                                                        border_spacing=0)
         self.pause_resume_btn.pack(pady=10, padx=10, side=tk.LEFT)
         # self.play = tk.Button(self.btn_frm, text='Play from beginning', cursor="hand2", command=self.play_from_beginning)
         self.play = customtkinter.CTkButton(self.btn_frm, 
-                                            text='Play selection from beginning', 
+                                            text='Play selection', 
                                             image=self.start_img, 
                                             cursor="hand2",
                                             text_color="#000000", 
                                             fg_color="transparent", 
                                             hover_color=self.color["orange"], 
-                                            border_width=1 )
+                                            border_width=1,
+                                            border_spacing=0 )
         self.play.pack(pady=10, padx=10, side=tk.LEFT)
         # self.stream_btn = tk.Button(self.btn_frm, text='Camera', cursor="hand2")
         self.stream_btn = customtkinter.CTkButton(self.btn_frm, 
@@ -296,7 +316,8 @@ class GUI:
                                                   text_color="#000000", 
                                                   fg_color="transparent", 
                                                   hover_color=self.color["orange"], 
-                                                  border_width=1)
+                                                  border_width=1,
+                                                  border_spacing=0)
         self.stream_btn.pack(pady=10, padx=10, side=tk.LEFT)
 
     def play_from_beginning(self):
@@ -317,7 +338,26 @@ class GUI:
             self.pause_resume_btn.configure(image=self.play_img,text="Resume")
             self.paused = True
             # send resume command to server
+    
+    def control_ui(self):
+        self.section2 = tk.Frame(self.root)
+        self.section2.pack(side=tk.TOP)
+        self.frame3 = tk.Frame(self.section2)
+        self.frame3.pack(pady=20, padx=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        self.ctrl_title = tk.Label(self.frame3, text="Control Panel", font=self.title_font)
+        self.ctrl_title.pack(side=tk.TOP)
+        self.ctrl_inst = tk.Label(self.frame3, text="Click on button to enable")
+        self.ctrl_inst.pack(padx=20, side=tk.TOP, anchor='nw')
         
+        self.ctrl_btn_frm = tk.Frame(self.frame3)
+        self.ctrl_btn_frm.pack(side=tk.TOP)
+        self.L_light = tk.Button(self.ctrl_btn_frm, text="Left light")
+        self.L_light.pack(side=tk.LEFT, padx=20, pady=20)
+        self.C_light = tk.Button(self.ctrl_btn_frm, text="Center light")
+        self.C_light.pack(side=tk.LEFT, padx=20, pady=20)
+        self.R_light = tk.Button(self.ctrl_btn_frm, text="Right light")
+        self.R_light.pack(side=tk.LEFT, padx=20, pady=20)
 
 # # Frame--select device
 # device_frm = tk.Frame(window, width=180, height=100)
@@ -336,15 +376,8 @@ class GUI:
 # order_des = tk.Label(order_frm, text="Click to instant play or move items to change the order").pack()
 # # list_frm = tk.Frame(order_frm)
 # # list_frm.pack(side=tk.LEFT)
-
-
-# # Frame 3--control panel
-# ctrl_frm = tk.Frame(root, height=100)
-# ctrl_label = tk.Label(ctrl_frm, text="Control center", font=20).pack(padx=20, pady=10)
-# L_light = tk.Button(ctrl_frm, text="Left light").pack(side=tk.LEFT, padx=20, pady=20)
-# C_light = tk.Button(ctrl_frm, text="Center light").pack(side=tk.LEFT, padx=20, pady=20)
-# R_light = tk.Button(ctrl_frm, text="Right light").pack(side=tk.LEFT, padx=20, pady=20)
-# ctrl_frm.pack(side=tk.LEFT,expand=True)
+        
+    
 
 if __name__ == "__main__": 
   
