@@ -119,15 +119,17 @@ class GUI:
                  ('image files', '*.png *.jpeg *.jpg'),
                  ('all files', '*.*')
                 )
-        file_path = fd.askopenfilenames(title="Select File(s)",
+        # multiple file selections (single file: fd.askopenfilename())
+        file_paths = fd.askopenfilenames(title="Select File(s)",
                                        filetypes=filetype)
-        # Change label contents
-        if file_path:
-            if self.local_file.add_file(file_path): # True if file_path appended to local_file 
-                self.listbox_added.insert(tk.END, file_path)
-                self.instructions.configure(text="File(s) added to the list. ", fg="darkviolet") # for multi file selection
-            else:
-                messagebox.showerror("Error", "No files selected or file not found!")
+        if file_paths:
+            # save files to local_file and insert to listbox
+            for file_path in file_paths:
+                if self.local_file.add_file(file_path): # True if file_path appended to local_file 
+                    self.listbox_added.insert(tk.END, file_path)
+            self.instructions.configure(text="File(s) added to the list. ", fg="darkviolet") # for multi file selection
+        else:
+            messagebox.showerror("Error", "No files selected or file not found!")
         # Below lines used when a Entry box needed
         # self.entry.delete(0, tk.END)
         # self.entry.insert(tk.END, filename)
