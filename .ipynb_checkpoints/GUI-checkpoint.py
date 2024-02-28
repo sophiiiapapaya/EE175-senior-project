@@ -62,7 +62,8 @@ class GUI:
             
     def manage_file_ui(self):
         self.frame1 = tk.Frame(self.root)
-        self.frame1.pack(pady=20, padx=20, side=tk.LEFT)
+        self.frame1.grid(row=0, column=0,pady=20, padx=20, sticky='w')
+        # self.frame1.pack(pady=20, padx=20, side=tk.LEFT)
 
         self.title_font = tk.font.Font(size=20)
         self.manage_title = tk.Label(self.frame1, text="Manage File", font=self.title_font)
@@ -209,7 +210,8 @@ class GUI:
         
     def playback_ui(self):
         self.frame2 = tk.Frame(self.root)
-        self.frame2.pack(pady=20, padx=20, side=tk.LEFT)
+        self.frame2.grid(row=0, column=1,pady=20, padx=20, sticky='ws')
+        # self.frame2.pack(pady=20, padx=20, side=tk.LEFT)
 
         self.playback_title = tk.Label(self.frame2, text="Double-click to play.\n Click on PAUSE to pause the media. ")
         self.playback_title.grid(row=0, column=0)
