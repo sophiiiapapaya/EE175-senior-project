@@ -13,7 +13,24 @@ import os
 #  3. control panel with functional buttons (area light, select and play)
 #  4. Select device
 
-class FileStorage:
+class Local_File:
+    def __init__(self):
+        self.files = []
+
+    def add_file(self, file_path):
+        if os.path.exists(file_path):
+            self.files.append(file_path)
+            return True
+        else:
+            return False
+
+    def delete_file(self, index):
+        del self.files[index]
+
+    def get_files(self):
+        return self.files
+
+class Cloud_File:
     def __init__(self):
         # Add: Show list of uploaded files. available for click and play
         self.files = []
@@ -37,7 +54,8 @@ class GUI:
     def __init__(self, master) -> None: 
         self.root = root
         self.root.title("Smart Mirror Control Station")
-        self.file_storage = FileStorage()
+        self.local_file = Local_File()
+        self.cloud_file = Cloud_File()
 
         self.manage_file_ui()
         self.playback_ui()
@@ -85,16 +103,16 @@ class GUI:
         # self.add_button = tk.Button(self.root, text="Add File", command=self.add_file)
         # self.add_button.pack(pady=10)
 
-        self.uploaded_files_frm = tk.Frame(self.files_frm)
-        self.uploaded_files_frm.pack(pady=20, side=tk.LEFT)
-        self.uploaded_files_label = tk.Label(self.uploaded_files_frm, text="Media Files Uploaded")
-        self.uploaded_files_label.pack()
-        self.listbox_uploaded = tk.Listbox(self.uploaded_files_frm, width=50)
-        self.listbox_uploaded.pack(pady=10, side=tk.LEFT, fill=tk.BOTH)
-        self.list_uploaded_scroll = tk.Scrollbar(self.uploaded_files_frm)
-        self.list_uploaded_scroll.pack(side=tk.RIGHT, fill=tk.BOTH) 
-        self.listbox_uploaded.config(yscrollcommand=self.list_uploaded_scroll.set) 
-        self.list_uploaded_scroll.config(command=self.listbox_uploaded.yview)
+        self.cloud_files_frm = tk.Frame(self.files_frm)
+        self.cloud_files_frm.pack(pady=20, side=tk.LEFT)
+        self.cloud_files_label = tk.Label(self.cloud_files_frm, text="Media Files Uploaded")
+        self.cloud_files_label.pack()
+        self.listbox_cloud = tk.Listbox(self.cloud_files_frm, width=50)
+        self.listbox_cloud.pack(pady=10, side=tk.LEFT, fill=tk.BOTH)
+        self.list_cloud_scroll = tk.Scrollbar(self.cloud_files_frm)
+        self.list_cloud_scroll.pack(side=tk.RIGHT, fill=tk.BOTH) 
+        self.listbox_cloud.config(yscrollcommand=self.list_cloud_scroll.set) 
+        self.list_cloud_scroll.config(command=self.listbox_cloud.yview)
 
     def browse_files(self):
         filetype = (('video files', '*.mp4'),
@@ -106,10 +124,8 @@ class GUI:
                                        filetypes=filetype)
         # Change label contents
         if file_path:
-            if self.file_storage.add_file(file_path): # True if file_path appended to file_storage 
+            if self.local_file.add_file(file_path): # True if file_path appended to local_file 
                 self.listbox_added.insert(tk.END, file_path)
-                # Remove: added for testing purpose
-                self.pb_list.insert(tk.END, file_path)
                 
                 self.instructions.configure(text="File(s) added to the list. ", fg="darkviolet") # for multi file selection
             else:
@@ -123,7 +139,7 @@ class GUI:
         if selection:
             index = selection[0]
             self.listbox_added.delete(index)
-            self.file_storage.delete_file(index)
+            self.local_file.delete_file(index)
             self.instructions.configure(text="File removed from the storage. ",fg="darkviolet")
         else:
             messagebox.showwarning("Warning", "Please select a file to remove!")
@@ -133,19 +149,23 @@ class GUI:
         selection = self.listbox_added.curselection()
         if selection:
             index = selection[0]
-            file_path = self.file_storage.get_files()[index]
-            self.send_to_device(file_path)
+            file_path = self.local_file.get_files()[index]
             # testing purpose:
             print(selection)
             print(file_path)
             
-            self.listbox_uploaded.insert(tk.END, file_path)
-            # update playback list
-            file_name, file_type = self.get_filename_ext(file_path, index)
-            self.pb_list.insert(tk.END, f" {file_name}.{file_type}")
+            if self.cloud_file.add_file(file_path): # True if file_path appended to cloud_file 
+                # self.send_to_device(file_path)
+                self.listbox_cloud.insert(tk.END, file_path)
+                
+                # update playback list
+                file_name, file_type = self.get_filename_ext(file_path, index)
+                self.pb_list.insert(tk.END, f" {file_name}.{file_type}")
             
-            self.listbox_added.delete(index)
-            self.instruction.configure(text="File sent to the device. ",fg="darkviolet")
+                self.listbox_added.delete(index)
+                self.instructions.configure(text="File sent to the device. ",fg="darkviolet")
+            else:
+                messagebox.showwarning("Warning", "File did not send!")
         else:
             messagebox.showwarning("Warning", "Please select a file to send!")
 
@@ -174,12 +194,13 @@ class GUI:
 
     # Add: move selected files from right listbox to left listbox
     def delete_file(self):
-        selection = self.listbox_uploaded.curselection()
+        selection = self.listbox_cloud.curselection()
         if selection:
             index = selection[0]
-            self.listbox_added.insert(tk.END, selection) # add file back to listbox_added
-            # delete from uploaded and add to listbox_added
-            self.listbox_uploaded.delete(index)
+            file_path = self.cloud_file.get_files()[index] 
+            self.listbox_added.insert(tk.END, file_path) # add file back to listbox_added
+            # delete from cloud and add to listbox_added
+            self.listbox_cloud.delete(index)
             self.pb_list.delete(index)
             self.instructions.configure(text="File removed from device. ", fg="darkviolet")
         else:
@@ -222,7 +243,7 @@ class GUI:
         self.pause_btn = tk.Button(self.pb_btn_frm, text="PAUSE", cursor="hand2")
         self.pause_btn.pack(pady=10, side=tk.RIGHT)
 
-    def get_filename_ext(file_path, index):
+    def get_filename_ext(self, file_path, index):
         # Extract file names and extensions from paths
         file_name = os.path.basename(file_path)
         file_name, file_type = os.path.splitext(file_name)
