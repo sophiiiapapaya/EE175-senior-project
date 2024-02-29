@@ -69,7 +69,8 @@ class GUI:
             "blue" : "#59BACC",
             "green" : "#58AD69", 
             "orange" : "#FFBC49",
-            "red" : "#E2574C"
+            "red" : "#E2574C", 
+            "light-gray": "#b5b5b5"
         }
         
         self.load_images()
@@ -85,10 +86,10 @@ class GUI:
 
     def manage_file_ui(self):
         self.section1 = tk.Frame(self.root)
-        self.section1.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.section1.pack(side=tk.LEFT, expand=True)
         self.frame1 = tk.Frame(self.section1)
         # self.frame1.grid(row=0, column=0,pady=20, padx=20, sticky='nswe')
-        self.frame1.pack(pady=20, padx=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.frame1.pack(pady=20, padx=20, side=tk.TOP, expand=True)
 
         self.title_font = tk.font.Font(size=20)
         self.manage_title = tk.Label(self.frame1, text="Manage File", font=self.title_font)
@@ -123,14 +124,14 @@ class GUI:
         self.remove_button.pack(pady=10, padx=10,side=tk.LEFT)
 
         self.files_frm = tk.Frame(self.frame1)
-        self.files_frm.pack(pady=20, padx=20, side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.files_frm.pack(pady=20, padx=20, side=tk.TOP, expand=True)
         
         self.added_files_frm = tk.Frame(self.files_frm)
-        self.added_files_frm.pack(pady=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.added_files_frm.pack(pady=20, side=tk.LEFT, expand=True)
         self.added_files_label = tk.Label(self.added_files_frm, text="Media Files Added. Click on > to upload")
         self.added_files_label.pack()
         self.listbox_added = tk.Listbox(self.added_files_frm, width=50, selectmode = "multiple")
-        self.listbox_added.pack(pady=10, side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.listbox_added.pack(pady=10, side=tk.LEFT, expand=True)
         self.list_added_scroll = ttk.Scrollbar(self.added_files_frm, style="Vertical.TScrollbar")
         self.list_added_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
         self.listbox_added.config(yscrollcommand=self.list_added_scroll.set) 
@@ -144,11 +145,11 @@ class GUI:
         self.delete_button.pack(pady=10)
 
         self.cloud_files_frm = tk.Frame(self.files_frm)
-        self.cloud_files_frm.pack(pady=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.cloud_files_frm.pack(pady=20, side=tk.LEFT, expand=True)
         self.cloud_files_label = tk.Label(self.cloud_files_frm, text="Media Files Uploaded")
         self.cloud_files_label.pack()
         self.listbox_cloud = tk.Listbox(self.cloud_files_frm, width=50, selectmode = "multiple")
-        self.listbox_cloud.pack(pady=10, side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.listbox_cloud.pack(pady=10, side=tk.LEFT, expand=True)
         self.list_cloud_scroll = ttk.Scrollbar(self.cloud_files_frm, style="Vertical.TScrollbar")
         self.list_cloud_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
         self.listbox_cloud.config(yscrollcommand=self.list_cloud_scroll.set) 
@@ -228,8 +229,10 @@ class GUI:
         return file_name, file_type
         
     def playback_ui(self):
-        self.frame2 = tk.Frame(self.section1)
-        self.frame2.pack(pady=20, padx=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.section2 = tk.Frame(self.root)
+        self.section2.pack(side=tk.LEFT, expand=True)
+        self.frame2 = tk.Frame(self.section2)
+        self.frame2.pack(pady=20, padx=20, side=tk.TOP, expand=True)
 
         self.playback_title = tk.Label(self.frame2, text="Select file and click an action button.")
         self.playback_title.pack(padx=20, side=tk.TOP, anchor='nw')
@@ -250,6 +253,7 @@ class GUI:
                                   selectbackground="darkviolet", # Font color
                                   cursor="hand2") 
         self.pb_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.pb_list.bind('<<ListboxSelect>>',self.pb_action)
         self.pb_scroll = ttk.Scrollbar(self.pb_list_frm, style="Vertical.TScrollbar") # Define scrollbar
         self.pb_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
         self.pb_list.config(yscrollcommand=self.pb_scroll.set)  # Link scrollbar with listbox
@@ -261,52 +265,53 @@ class GUI:
         self.btn_frm = tk.Frame(self.frame2)
         self.btn_frm.pack(padx=10, side=tk.TOP, anchor='nw', fill=tk.NONE)
 
-        btn_text = ["Pause", "Play selection", "Camera"]
         self.btn_cmds =[self.pause_resume_cmd, self.restart_cmd, self.stream_cmd]
         # create playback buttons
-        for txt, img, cmd in zip(btn_text, self.img_list, self.btn_cmds):
-            button = customtkinter.CTkButton(self.btn_frm, 
-                                            text=txt, 
+        for img, cmd in zip(self.img_list, self.btn_cmds):
+            button = customtkinter.CTkButton(self.btn_frm,
+                                            width=20,
                                             image=img, 
+                                            text=None,
                                             cursor="hand2", 
                                             command=cmd, 
                                             text_color="#000000", 
                                             fg_color="transparent", 
                                             hover_color=self.color["orange"], 
                                             border_width=1,
+                                            border_color=self.color["light-gray"],
                                             border_spacing=0)
             button.pack(pady=10, padx=10, side=tk.LEFT)
             self.pb_buttons.append(button)
 
-        self.pb_buttons[0].configure(state="disabled") # disable pause/resume button
-        self.pb_buttons[1].configure(state="disabled") # disable restart button
-        self.pb_init()
+        self.pb_buttons[0].configure(state="disabled", fg_color=self.color["light-gray"]) # disable pause/resume button
+        self.pb_buttons[1].configure(state="disabled", fg_color=self.color["light-gray"]) # disable restart button
 
-    def pb_init(self):
+    # Enable buttons 
+    def pb_action(self, event=None):
         selection = self.pb_list.curselection()
         if selection:
-            self.pb_buttons[0].configure(state="enabled") # disable pause/resume button
-            self.pb_buttons[1].configure(state="enabled") # disable restart button
-            # if self.status.cget("text") == "<Nothing playing>": # if text attribute of the label self.status is nothing playing
             index = selection[0]
-            file_path = self.pb_list.get(index)
+            file_path = self.pb_list.get(index)            
+            status_txt = f"Selected {file_path}.\nPlay from where you left off or to play from the beginning."
+            self.status.configure(text=status_txt)
+            self.status.pack(padx=20, side=tk.TOP, anchor="nw")
+            self.pb_buttons[0].configure(state="enabled", fg_color="transparent") # enable pause/resume button
+            self.pb_buttons[1].configure(state="enabled", fg_color="transparent") # enable restart button
+    
             if self.restart == True:
-                self.status.configure(text=(f"Playing {file_path} from the beginning"))
+                self.status.configure(text=(f"Playing {self.pb_list.curselection()} from the beginning"))
                 self.restart == False # set it as unclicked
-            elif self.start_stream == True:
-                self.status.configure(text=(f"Connecting camera to device (IP: [IP_addr])"))
-                self.start_stream == False
                 
                 
     # self.pb_buttons[0]
     def pause_resume_cmd(self):
-        if !self.playing:
-            self.pb_buttons[0].configure(image=self.img_list[0],text="Resume")
-            self.playing = True
+        if self.playing:
+            self.pb_buttons[0].configure(image=self.img_list[0])
+            self.playing = False
             # send pause command to server
         else:
-            self.pb_buttons[0].configure(image=self.pause_img,text="Pause")
-            self.playing = False
+            self.pb_buttons[0].configure(image=self.pause_img)
+            self.playing = True
             # send resume command to server 
 
     # self.pb_buttons[1]
@@ -316,15 +321,14 @@ class GUI:
       
     # self.pb_buttons[2]
     def stream_cmd(self):
-        self.start_stream = True
+        self.status.configure(text=(f"Connecting camera to device (IP: [IP_addr])"))
         file_path = 0 # will connect the camera
         # send file_path to the client
     
     def control_ui(self):
-        self.section2 = tk.Frame(self.root)
-        self.section2.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        self.frame3 = tk.Frame(self.section2)
-        self.frame3.pack(pady=20, padx=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        self.frame3 = tk.Frame(self.section1)
+        self.frame3.pack(pady=20, padx=20, side=tk.TOP, expand=True)
 
         self.ctrl_title = tk.Label(self.frame3, text="Control Panel", font=self.title_font)
         self.ctrl_title.pack(side=tk.TOP)
