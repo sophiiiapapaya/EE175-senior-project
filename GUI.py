@@ -3,11 +3,6 @@ from tkinter import filedialog as fd
 from tkinter import messagebox, font, ttk
 import customtkinter
 from PIL import Image, ImageTk
-
-# import cv2
-# import socket
-# import pickle
-# import struct
 import os
 import server, client # import server.py and client.py
 
@@ -63,13 +58,12 @@ class GUI:
         # self.server_socket = server.Server_Socket()
         # self.server_socket.connect_client()
 
-        self.paused = True # initial state: all paused
-        self.button_img()
-        self.manage_file_ui()
-        self.playback_ui()
-        self.control_ui()
-
-    def button_img(self):
+        self.playing = False # initial state: all paused
+        self.restart = False
+        self.start_stream = False 
+        self.img_path_list = ['assets/play-img.png','assets/start-img.png', 'assets/stream-img.png']
+        self.img_list = []
+        self.pb_buttons = []
         self.color = {
             "rose" : "#C77C78",
             "blue" : "#59BACC",
@@ -77,14 +71,21 @@ class GUI:
             "orange" : "#FFBC49",
             "red" : "#E2574C"
         }
+        
+        self.load_images()
+        self.manage_file_ui()
+        self.playback_ui()
+        self.control_ui()
+
+    def load_images(self):
+        for path in self.img_path_list:
+            btn_image = ImageTk.PhotoImage(Image.open(path).resize((20, 20), Image.LANCZOS))
+            self.img_list.append(btn_image)
         self.pause_img = ImageTk.PhotoImage(Image.open('assets/pause-img.png').resize((20, 20), Image.LANCZOS))
-        self.play_img = ImageTk.PhotoImage(Image.open('assets/play-img.png').resize((20,20), Image.LANCZOS))
-        self.start_img = ImageTk.PhotoImage(Image.open('assets/start-img.png').resize((20,20), Image.LANCZOS))
-        self.stream_img = ImageTk.PhotoImage(Image.open('assets/stream-img.png').resize((20,20), Image.LANCZOS))
-    
+
     def manage_file_ui(self):
         self.section1 = tk.Frame(self.root)
-        self.section1.pack(side=tk.TOP)
+        self.section1.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         self.frame1 = tk.Frame(self.section1)
         # self.frame1.grid(row=0, column=0,pady=20, padx=20, sticky='nswe')
         self.frame1.pack(pady=20, padx=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -126,7 +127,7 @@ class GUI:
         
         self.added_files_frm = tk.Frame(self.files_frm)
         self.added_files_frm.pack(pady=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.added_files_label = tk.Label(self.added_files_frm, text="Media Files Added")
+        self.added_files_label = tk.Label(self.added_files_frm, text="Media Files Added. Click on > to upload")
         self.added_files_label.pack()
         self.listbox_added = tk.Listbox(self.added_files_frm, width=50, selectmode = "multiple")
         self.listbox_added.pack(pady=10, side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -204,32 +205,6 @@ class GUI:
             self.instructions.configure(text="File(s) sent to the device. ",fg="darkviolet")
         else:
             messagebox.showwarning("Warning", "Please select a file to send!")
-        
-    # def send_to_device(file_path):
-    #     try:
-    #         if file_path:
-    #             with open(file_path, "rb") as file:
-    #                 #socket
-    #                 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #                 host_name = socket.gethostname() # localhost
-    #                 host_ip = socket.gethostbyname(host_name)
-    #                 print(f'{host_name} HOST IP: {host_ip}')
-    #                 # host_ip = '10.13.26.224' # localhost
-    #                 port = 9999
-
-    #                 client_socket.connect((host_ip, port))
-
-    #                 data = file.read()
-    #                 data_serialized = pickle.dumps(data)
-
-    #                 client_socket.sendall(struct.pack("Q", len(data_serialized)))
-    #                 client_socket.sendall(data_serialized)
-
-    #                 print("File sent successfully")
-
-    #                 client_socket.close()
-    #     except Exception as e:
-    #         print("Error sending file", e)
 
     # Add: move selected files from right listbox to left listbox
     def delete_file(self):
@@ -256,9 +231,6 @@ class GUI:
         self.frame2 = tk.Frame(self.section1)
         self.frame2.pack(pady=20, padx=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        self.status = tk.Label(self.frame2, text="Not playing", fg="darkviolet")
-        self.status.pack(padx=20, side=tk.TOP, anchor="nw")
-
         self.playback_title = tk.Label(self.frame2, text="Select file and click an action button.")
         self.playback_title.pack(padx=20, side=tk.TOP, anchor='nw')
         
@@ -283,65 +255,74 @@ class GUI:
         self.pb_list.config(yscrollcommand=self.pb_scroll.set)  # Link scrollbar with listbox
         self.pb_scroll.config(command=self.pb_list.yview) # Scrollability
 
+        self.status = tk.Label(self.frame2, text="<Nothing playing>", fg="darkviolet")
+        self.status.pack(padx=20, side=tk.TOP, anchor="nw")
+        
         self.btn_frm = tk.Frame(self.frame2)
         self.btn_frm.pack(padx=10, side=tk.TOP, anchor='nw', fill=tk.NONE)
-        # self.pause_resume_btn = tk.Button(self.btn_frm, text="Pause", image=self.pause_icon, cursor="hand2", command=self.pause_resume)
-        self.pause_resume_btn = customtkinter.CTkButton(self.btn_frm, 
-                                                        text="Play", 
-                                                        image=self.play_img, 
-                                                        cursor="hand2", 
-                                                        command=self.pause_resume, 
-                                                        text_color="#000000", 
-                                                        fg_color="transparent", 
-                                                        hover_color=self.color["orange"], 
-                                                        border_width=1,
-                                                        border_spacing=0)
-        self.pause_resume_btn.pack(pady=10, padx=10, side=tk.LEFT)
-        # self.play = tk.Button(self.btn_frm, text='Play from beginning', cursor="hand2", command=self.play_from_beginning)
-        self.play = customtkinter.CTkButton(self.btn_frm, 
-                                            text='Play selection', 
-                                            image=self.start_img, 
-                                            cursor="hand2",
+
+        btn_text = ["Pause", "Play selection", "Camera"]
+        self.btn_cmds =[self.pause_resume_cmd, self.restart_cmd, self.stream_cmd]
+        # create playback buttons
+        for txt, img, cmd in zip(btn_text, self.img_list, self.btn_cmds):
+            button = customtkinter.CTkButton(self.btn_frm, 
+                                            text=txt, 
+                                            image=img, 
+                                            cursor="hand2", 
+                                            command=cmd, 
                                             text_color="#000000", 
                                             fg_color="transparent", 
                                             hover_color=self.color["orange"], 
                                             border_width=1,
-                                            border_spacing=0 )
-        self.play.pack(pady=10, padx=10, side=tk.LEFT)
-        # self.stream_btn = tk.Button(self.btn_frm, text='Camera', cursor="hand2")
-        self.stream_btn = customtkinter.CTkButton(self.btn_frm, 
-                                                  text='Camera', 
-                                                  image=self.stream_img, 
-                                                  cursor="hand2",
-                                                  text_color="#000000", 
-                                                  fg_color="transparent", 
-                                                  hover_color=self.color["orange"], 
-                                                  border_width=1,
-                                                  border_spacing=0)
-        self.stream_btn.pack(pady=10, padx=10, side=tk.LEFT)
+                                            border_spacing=0)
+            button.pack(pady=10, padx=10, side=tk.LEFT)
+            self.pb_buttons.append(button)
 
-    def play_from_beginning(self):
+        self.pb_buttons[0].configure(state="disabled") # disable pause/resume button
+        self.pb_buttons[1].configure(state="disabled") # disable restart button
+        self.pb_init()
+
+    def pb_init(self):
         selection = self.pb_list.curselection()
         if selection:
+            self.pb_buttons[0].configure(state="enabled") # disable pause/resume button
+            self.pb_buttons[1].configure(state="enabled") # disable restart button
+            # if self.status.cget("text") == "<Nothing playing>": # if text attribute of the label self.status is nothing playing
             index = selection[0]
             file_path = self.pb_list.get(index)
-            self.status.configure(text=(f"Playing {file_path} from the beginning"))
-        else:
-            messagebox.showwarning("Warning", "Please select a file to send!")
-            
-    def pause_resume(self):
-        if self.paused:
-            self.pause_resume_btn.configure(image=self.pause_img,text="Pause")
-            self.paused = False
+            if self.restart == True:
+                self.status.configure(text=(f"Playing {self.pb_list.curselection()} from the beginning"))
+                self.restart == False # set it as unclicked
+            elif self.start_stream == True:
+                self.status.configure(text=(f"Connecting camera to device (IP: [IP_addr])"))
+                self.start_stream == False
+                
+                
+    # self.pb_buttons[0]
+    def pause_resume_cmd(self):
+        if !self.playing:
+            self.pb_buttons[0].configure(image=self.img_list[0],text="Resume")
+            self.playing = True
             # send pause command to server
         else:
-            self.pause_resume_btn.configure(image=self.play_img,text="Resume")
-            self.paused = True
-            # send resume command to server
+            self.pb_buttons[0].configure(image=self.pause_img,text="Pause")
+            self.playing = False
+            # send resume command to server 
+
+    # self.pb_buttons[1]
+    def restart_cmd(self):
+        self.restart = True
+        # restart the selected video
+      
+    # self.pb_buttons[2]
+    def stream_cmd(self):
+        self.start_stream = True
+        file_path = 0 # will connect the camera
+        # send file_path to the client
     
     def control_ui(self):
         self.section2 = tk.Frame(self.root)
-        self.section2.pack(side=tk.TOP)
+        self.section2.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         self.frame3 = tk.Frame(self.section2)
         self.frame3.pack(pady=20, padx=20, side=tk.LEFT, fill=tk.BOTH, expand=True)
 
