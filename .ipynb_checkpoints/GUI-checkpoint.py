@@ -51,7 +51,7 @@ class Cloud_File:
 # Label Widgets 
 class GUI: 
     def __init__(self, master) -> None: 
-        self.root = root
+        self.root = master
         self.root.title("Smart Mirror Control Station")
         self.local_file = Local_File()
         self.cloud_file = Cloud_File()
@@ -64,6 +64,7 @@ class GUI:
         self.img_path_list = ['assets/play-img.png','assets/start-img.png', 'assets/stream-img.png']
         self.img_list = []
         self.pb_buttons = []
+        self.label_font = font.Font(slant="italic")
         self.color = {
             "rose" : "#C77C78",
             "blue" : "#59BACC",
@@ -77,6 +78,7 @@ class GUI:
         self.manage_file_ui()
         self.playback_ui()
         self.control_ui()
+        self.select_device_ui()
 
     def load_images(self):
         for path in self.img_path_list:
@@ -124,34 +126,38 @@ class GUI:
         self.remove_button.pack(pady=10, padx=10,side=tk.LEFT)
 
         self.files_frm = tk.Frame(self.frame1)
-        self.files_frm.pack(pady=20, padx=20, side=tk.TOP, expand=True)
+        self.files_frm.pack(padx=20, side=tk.TOP, expand=True)
         
-        self.added_files_frm = tk.Frame(self.files_frm)
-        self.added_files_frm.pack(pady=20, side=tk.LEFT, expand=True)
-        self.added_files_label = tk.Label(self.added_files_frm, text="Media Files Added. Click on > to upload")
-        self.added_files_label.pack()
-        self.listbox_added = tk.Listbox(self.added_files_frm, width=50, selectmode = "multiple")
-        self.listbox_added.pack(pady=10, side=tk.LEFT, expand=True)
+        self.added_files_frm = tk.Frame(self.files_frm, borderwidth=1)
+        self.added_files_frm.pack(side=tk.LEFT, expand=True)
+        self.added_files_label1 = tk.Label(self.added_files_frm, text="Selected files will be stored here. ")
+        self.added_files_label1.pack()
+        self.listbox_added = tk.Listbox(self.added_files_frm, borderwidth=0, width=50, height=20, selectmode = "multiple")
+        self.listbox_added.pack(pady=10, side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.list_added_scroll = ttk.Scrollbar(self.added_files_frm, style="Vertical.TScrollbar")
-        self.list_added_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
+        self.list_added_scroll.pack(pady=10,side=tk.RIGHT, fill=tk.Y) 
         self.listbox_added.config(yscrollcommand=self.list_added_scroll.set) 
         self.list_added_scroll.config(command=self.listbox_added.yview) 
-
+        self.file_note_frm = tk.Frame(self.frame1, borderwidth=1)
+        self.file_note_frm.pack(padx=20, side=tk.TOP, fill=tk.X, expand=True)
+        self.added_files_label2 = tk.Label(self.file_note_frm, text="The list is for your convenience. Highlight the files and click on > to upload", font=self.label_font)
+        self.added_files_label2.pack(side=tk.LEFT, anchor='nw')
+        
         self.send_remove_frm = tk.Frame(self.files_frm)
         self.send_remove_frm.pack(side=tk.LEFT)
-        self.send_button = tk.Button(self.send_remove_frm, text="Send File to Server", command=self.ready_to_send)
+        self.send_button = tk.Button(self.send_remove_frm, text=">", command=self.ready_to_send)
         self.send_button.pack(pady=10)
-        self.delete_button = tk.Button(self.send_remove_frm, text="Remove from server", command=self.delete_file)
+        self.delete_button = tk.Button(self.send_remove_frm, text="<", command=self.delete_file)
         self.delete_button.pack(pady=10)
 
-        self.cloud_files_frm = tk.Frame(self.files_frm)
-        self.cloud_files_frm.pack(pady=20, side=tk.LEFT, expand=True)
+        self.cloud_files_frm = tk.Frame(self.files_frm, borderwidth=1)
+        self.cloud_files_frm.pack(side=tk.LEFT, expand=True)
         self.cloud_files_label = tk.Label(self.cloud_files_frm, text="Media Files Uploaded")
         self.cloud_files_label.pack()
-        self.listbox_cloud = tk.Listbox(self.cloud_files_frm, width=50, selectmode = "multiple")
+        self.listbox_cloud = tk.Listbox(self.cloud_files_frm, borderwidth=0, width=50, height=20, selectmode = "multiple")
         self.listbox_cloud.pack(pady=10, side=tk.LEFT, expand=True)
         self.list_cloud_scroll = ttk.Scrollbar(self.cloud_files_frm, style="Vertical.TScrollbar")
-        self.list_cloud_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
+        self.list_cloud_scroll.pack(pady=10,side=tk.RIGHT, fill=tk.Y) 
         self.listbox_cloud.config(yscrollcommand=self.list_cloud_scroll.set) 
         self.list_cloud_scroll.config(command=self.listbox_cloud.yview)
 
@@ -326,14 +332,13 @@ class GUI:
         # send file_path to the client
     
     def control_ui(self):
-        
         self.frame3 = tk.Frame(self.section1)
         self.frame3.pack(pady=20, padx=20, side=tk.TOP, expand=True)
 
         self.ctrl_title = tk.Label(self.frame3, text="Control Panel", font=self.title_font)
         self.ctrl_title.pack(side=tk.TOP)
         self.ctrl_inst = tk.Label(self.frame3, text="Click on button to enable")
-        self.ctrl_inst.pack(padx=20, side=tk.TOP, anchor='nw')
+        self.ctrl_inst.pack(padx=20, side=tk.TOP)
         
         self.ctrl_btn_frm = tk.Frame(self.frame3)
         self.ctrl_btn_frm.pack(side=tk.TOP)
@@ -344,15 +349,40 @@ class GUI:
         self.R_light = tk.Button(self.ctrl_btn_frm, text="Right light")
         self.R_light.pack(side=tk.LEFT, padx=20, pady=20)
 
-# # Frame--select device
-# device_frm = tk.Frame(window, width=180, height=100)
-# # device_frm.columnconfigure(0, minsize=250)
-# # device_frm.rowconfigure([0, 1], minsize=100)
-# device_frm.pack()
-# select_label = tk.Label(device_frm, text="Choose the device to control", font=20).grid(row=0, column=0, sticky="w")
-# device1 = tk.Button(device_frm, text="device name 1").grid(row=1, column=0) # Receive device names from the same network
-# device2 = tk.Button(device_frm, text="device name 2").grid(row=2, column=0) # Receive device names from the same network
+    def select_device_ui(self):
+        self.frame4 = tk.Frame(self.section2)
+        self.frame4.pack(pady=20, padx=20, side=tk.TOP, expand=True)
 
+        self.select_device_title = tk.Label(self.frame4, text="Choose your device and click connect.")
+        self.select_device_title.pack(padx=20, side=tk.TOP, anchor='nw')
+
+        self.device_list_frm = tk.Frame(self.frame4)
+        self.device_list_frm.pack(padx=20, side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        # Listbox properties
+        self.device_list = tk.Listbox(self.device_list_frm, 
+                                  borderwidth=0, 
+                                  highlightthickness=0, # remove listbox border
+                                  relief=tk.FLAT, # Default: SUNKEN
+                                  selectbackground="darkviolet", # Font color
+                                  cursor="hand2") 
+        self.device_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        self.device_list_scroll = ttk.Scrollbar(self.device_list_frm, style="Vertical.TScrollbar") # Define scrollbar
+        self.device_list_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
+        self.device_list.config(yscrollcommand=self.device_list_scroll.set)  # Link scrollbar with listbox
+        self.device_list_scroll.config(command=self.device_list.yview) # Scrollability
+
+        self.conn_device_btn = customtkinter.CTkButton(self.frame4, 
+                                                        text="Connect", 
+                                                        cursor="hand2", 
+                                                        text_color="#000000", 
+                                                        fg_color="transparent", 
+                                                        hover_color=self.color["orange"], 
+                                                        border_width=1)
+        self.conn_device_btn.pack(pady=10, padx=10, side=tk.TOP)
+        
+        
 
 # # Frame 2--change playback order
 # order_frm = tk.Frame(master=window) 
@@ -362,10 +392,7 @@ class GUI:
 # # list_frm = tk.Frame(order_frm)
 # # list_frm.pack(side=tk.LEFT)
         
-    
-
-if __name__ == "__main__": 
-  
+def main():
     # Instantiating top level 
     root = tk.Tk() 
   
@@ -379,8 +406,11 @@ if __name__ == "__main__":
     # root.geometry("400x250") 
   
     # Calling our App 
-    gui = GUI(root) 
+    app = GUI(root) 
   
     # Mainloop which will cause this toplevel 
     # to run infinitely 
     root.mainloop() # Start the application. listens for event (loop)
+
+if __name__ == "__main__": 
+    main()
