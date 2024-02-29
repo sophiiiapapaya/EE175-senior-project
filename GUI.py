@@ -57,13 +57,17 @@ class GUI:
         self.cloud_file = Cloud_File()
         # self.server_socket = server.Server_Socket()
         # self.server_socket.connect_client()
-
+        #-------------------variables---------------------------
         self.playing = False # initial state: all paused
         self.restart = False
         self.start_stream = False 
         self.img_path_list = ['assets/play-img.png','assets/start-img.png', 'assets/stream-img.png']
         self.img_list = []
         self.pb_buttons = []
+        self.light_btns = []
+        self.load_images()
+
+        #-------------------styles-------------------------------
         self.label_font = font.Font(slant="italic")
         self.color = {
             "rose" : "#C77C78",
@@ -73,12 +77,13 @@ class GUI:
             "red" : "#E2574C", 
             "light-gray": "#b5b5b5"
         }
-        
-        self.load_images()
-        self.manage_file_ui()
+
+        #-------------------call ui-------------------------------
         self.playback_ui()
-        self.control_ui()
         self.select_device_ui()
+        self.manage_file_ui()
+        self.control_ui()
+        
 
     def load_images(self):
         for path in self.img_path_list:
@@ -86,23 +91,115 @@ class GUI:
             self.img_list.append(btn_image)
         self.pause_img = ImageTk.PhotoImage(Image.open('assets/pause-img.png').resize((20, 20), Image.LANCZOS))
 
-    def manage_file_ui(self):
+    def playback_ui(self):
         self.section1 = tk.Frame(self.root)
         self.section1.pack(side=tk.LEFT, expand=True)
+        self.status = tk.Label(self.section1, text="<Nothing playing>", fg="darkviolet", wraplength=245, justify=tk.LEFT)
+        self.status.pack(padx=20, side=tk.TOP, anchor="n")
+        
         self.frame1 = tk.Frame(self.section1)
-        # self.frame1.grid(row=0, column=0,pady=20, padx=20, sticky='nswe')
         self.frame1.pack(pady=20, padx=20, side=tk.TOP, expand=True)
 
+
+        self.playback_title = tk.Label(self.frame1, text="Select file and click an action button.")
+        self.playback_title.pack(padx=20, side=tk.TOP, anchor='nw')
+        
+        # Key descriptions
+        keys_list = """Keyboard:\n \'s\' for stop\n \'q\' for black screen\n \'p\' for resume to last play"""
+        self.keys_usage = tk.Label(self.frame1, text=keys_list, justify=tk.LEFT)
+        self.keys_usage.pack(padx=20, side=tk.TOP, anchor='nw')
+
+        self.pb_list_frm = tk.Frame(self.frame1)
+        self.pb_list_frm.pack(padx=20, side=tk.TOP, fill=tk.BOTH, expand=True)
+        
+        # Listbox properties
+        self.pb_list = tk.Listbox(self.pb_list_frm, 
+                                  borderwidth=0, 
+                                  highlightthickness=0, # remove listbox border
+                                  relief=tk.FLAT, # Default: SUNKEN
+                                  selectbackground="darkviolet",
+                                  cursor="hand2") 
+        self.pb_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.pb_list.bind('<<ListboxSelect>>',self.pb_action)
+        self.pb_scroll = ttk.Scrollbar(self.pb_list_frm, style="Vertical.TScrollbar") # Define scrollbar
+        self.pb_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
+        self.pb_list.config(yscrollcommand=self.pb_scroll.set)  # Link scrollbar with listbox
+        self.pb_scroll.config(command=self.pb_list.yview) # Scrollability
+        
+        self.btn_frm = tk.Frame(self.frame1)
+        self.btn_frm.pack(padx=10, side=tk.TOP, anchor='nw', fill=tk.NONE)
+
+        self.btn_cmds =[self.pause_resume_cmd, self.restart_cmd, self.stream_cmd]
+        # create playback buttons
+        for img, cmd in zip(self.img_list, self.btn_cmds):
+            button = customtkinter.CTkButton(self.btn_frm,
+                                            width=65,
+                                            image=img, 
+                                            text=None,
+                                            cursor="hand2", 
+                                            command=cmd, 
+                                            text_color="#000000", 
+                                            fg_color="transparent", 
+                                            hover_color=self.color["orange"], 
+                                            border_width=1,
+                                            border_color=self.color["light-gray"],
+                                            border_spacing=0)
+            button.pack(pady=10, padx=10, side=tk.LEFT)
+            self.pb_buttons.append(button)
+
+        self.pb_buttons[0].configure(state="disabled", fg_color=self.color["light-gray"]) # disable pause/resume button
+        self.pb_buttons[1].configure(state="disabled", fg_color=self.color["light-gray"]) # disable restart button
+
+    def select_device_ui(self):
+        self.frame3 = tk.Frame(self.section1)
+        self.frame3.pack(pady=20, padx=20, side=tk.TOP, expand=True)
+
+        self.select_device_title = tk.Label(self.frame3, text="Choose your device and click connect.")
+        self.select_device_title.pack(padx=20, side=tk.TOP, anchor='nw')
+
+        self.device_list_frm = tk.Frame(self.frame3)
+        self.device_list_frm.pack(padx=20, side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        # Listbox properties
+        self.device_list = tk.Listbox(self.device_list_frm, 
+                                  borderwidth=0, 
+                                  highlightthickness=0, # remove listbox border
+                                  relief=tk.FLAT, # Default: SUNKEN
+                                  selectbackground="darkviolet",
+                                  cursor="hand2") 
+        self.device_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        self.device_list_scroll = ttk.Scrollbar(self.device_list_frm, style="Vertical.TScrollbar") # Define scrollbar
+        self.device_list_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
+        self.device_list.config(yscrollcommand=self.device_list_scroll.set)  # Link scrollbar with listbox
+        self.device_list_scroll.config(command=self.device_list.yview) # Scrollability
+
+        self.conn_device_btn = customtkinter.CTkButton(self.frame3, 
+                                                        text="Connect", 
+                                                        cursor="hand2", 
+                                                        text_color="#000000", 
+                                                        fg_color="transparent", 
+                                                        hover_color=self.color["orange"], 
+                                                        border_width=1)
+        self.conn_device_btn.pack(pady=10, padx=10, side=tk.TOP)
+
+    def manage_file_ui(self):
+        self.section2 = tk.Frame(self.root)
+        self.section2.pack(side=tk.LEFT, expand=True)
+        self.frame2 = tk.Frame(self.section2)
+        # self.frame1.grid(row=0, column=0,pady=20, padx=20, sticky='nswe')
+        self.frame2.pack(pady=20, padx=20, side=tk.TOP, expand=True, anchor="nw")
+
         self.title_font = tk.font.Font(size=20)
-        self.manage_title = tk.Label(self.frame1, text="Manage File", font=self.title_font)
-        self.manage_title.pack(side=tk.TOP)
-        self.instructions = tk.Label(self.frame1, text="Click the button below to upload files")
+        self.manage_title = tk.Label(self.frame2, text="UPLOAD YOU FILES", font=self.title_font)
+        self.manage_title.pack(pady=20, side=tk.TOP, anchor="nw")
+        self.instructions = tk.Label(self.frame2, text="Click the button below to upload files")
         self.instructions.pack(padx=20, side=tk.TOP, anchor="nw")
 
         # self.entry = tk.Entry(self.frame, width=50)
         # self.entry.pack(side=tk.LEFT)
 
-        self.action_frm = tk.Frame(self.frame1)
+        self.action_frm = tk.Frame(self.frame2)
         self.action_frm.pack(padx=10, side=tk.TOP, anchor='nw')
         # self.browse_button = tk.Button(self.action_frm, text="Browse", command=self.browse_files)
         self.browse_button = customtkinter.CTkButton(self.action_frm, 
@@ -125,12 +222,12 @@ class GUI:
                                                         border_width=1)
         self.remove_button.pack(pady=10, padx=10,side=tk.LEFT)
 
-        self.files_frm = tk.Frame(self.frame1)
+        self.files_frm = tk.Frame(self.frame2)
         self.files_frm.pack(padx=20, side=tk.TOP, expand=True)
         
         self.added_files_frm = tk.Frame(self.files_frm, borderwidth=1)
         self.added_files_frm.pack(side=tk.LEFT, expand=True)
-        self.added_files_label1 = tk.Label(self.added_files_frm, text="Selected files will be stored here. ")
+        self.added_files_label1 = tk.Label(self.added_files_frm, text="Selected files will be added here. ")
         self.added_files_label1.pack()
         self.listbox_added = tk.Listbox(self.added_files_frm, borderwidth=0, width=50, height=20, selectmode = "multiple")
         self.listbox_added.pack(pady=10, side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -138,7 +235,7 @@ class GUI:
         self.list_added_scroll.pack(pady=10,side=tk.RIGHT, fill=tk.Y) 
         self.listbox_added.config(yscrollcommand=self.list_added_scroll.set) 
         self.list_added_scroll.config(command=self.listbox_added.yview) 
-        self.file_note_frm = tk.Frame(self.frame1, borderwidth=1)
+        self.file_note_frm = tk.Frame(self.frame2, borderwidth=1)
         self.file_note_frm.pack(padx=20, side=tk.TOP, fill=tk.X, expand=True)
         self.added_files_label2 = tk.Label(self.file_note_frm, text="The list is for your convenience. Highlight the files and click on > to upload", font=self.label_font)
         self.added_files_label2.pack(side=tk.LEFT, anchor='nw')
@@ -161,6 +258,31 @@ class GUI:
         self.listbox_cloud.config(yscrollcommand=self.list_cloud_scroll.set) 
         self.list_cloud_scroll.config(command=self.listbox_cloud.yview)
 
+    def control_ui(self):
+        self.frame4 = tk.Frame(self.section2)
+        self.frame4.pack(pady=20, padx=20, side=tk.TOP, expand=True, anchor="nw")
+
+        self.ctrl_title = tk.Label(self.frame4, text="CONTROL PANEL", font=self.title_font)
+        self.ctrl_title.pack(pady=20, side=tk.TOP, anchor="nw")
+        self.ctrl_inst = tk.Label(self.frame4, text="Click on button to enable")
+        self.ctrl_inst.pack(padx=20, side=tk.TOP, anchor="nw")
+        
+        self.ctrl_btn_frm = tk.Frame(self.frame4)
+        self.ctrl_btn_frm.pack(side=tk.TOP)
+
+        self.light_cmds = []
+        self.light_text = ["Left light", "Center light", "Right light"]
+        for txt in self.light_text:
+            button = customtkinter.CTkButton(self.ctrl_btn_frm, 
+                                                        text=txt, 
+                                                        cursor="hand2",  
+                                                        text_color="#000000", 
+                                                        fg_color="transparent", 
+                                                        hover_color=self.color["orange"], 
+                                                        border_width=1)
+            button.pack(pady=20, padx=20, side=tk.LEFT)
+            self.light_btns.append(button)
+
     def browse_files(self):
         filetype = (('video files', '*.mp4'),
                  ('image files', '*.png *.jpeg *.jpg'),
@@ -175,7 +297,7 @@ class GUI:
             for file_path in file_paths:
                 if self.local_file.add_file(file_path): # True if file_path appended to local_file 
                     self.listbox_added.insert(tk.END, file_path)
-            self.instructions.configure(text="File(s) added to the list. ", fg="darkviolet") # for multi file selection
+            self.status.configure(text="File(s) added to the list. ", fg="darkviolet") # for multi file selection
             
         # Below lines used when a Entry box needed
         # self.entry.delete(0, tk.END)
@@ -190,15 +312,14 @@ class GUI:
                 if 0 <= index < self.listbox_added.size():
                     self.listbox_added.delete(index) # Delete from listbox
                     self.local_file.delete_file(index) # Delete from storage            
-            self.instructions.configure(text="File removed from the storage. ",fg="darkviolet")
+            self.status.configure(text="File removed from the storage. ",fg="darkviolet")
         else:
             messagebox.showwarning("Warning", "Please select a file to remove!")
         
     # Select file from added list and send to server
     def ready_to_send(self):
-        select_indices = self.listbox_added.curselection()
-        if select_indices:
-            for index in select_indices: 
+        if self.listbox_added.curselection():
+            for index in self.listbox_added.curselection(): 
                 file_path = self.local_file.get_files()[index]
             
                 if self.cloud_file.add_file(file_path): # True if file_path appended to cloud_file 
@@ -208,23 +329,34 @@ class GUI:
                     self.pb_list.insert(tk.END, f"{file_name}{file_type}")
                 else:
                     messagebox.showwarning("Warning", "File did not send!")
-
-            self.instructions.configure(text="File(s) sent to the device. ",fg="darkviolet")
+            for index in reversed(self.listbox_added.curselection()):
+                # Ensure index is within valid range
+                if 0 <= index < self.listbox_added.size():
+                    self.listbox_added.delete(index) # Delete from listbox
+                    self.local_file.delete_file(index) # Delete from storage
+            self.status.configure(text="File(s) sent to the device. ",fg="darkviolet")
         else:
             messagebox.showwarning("Warning", "Please select a file to send!")
+
 
     # Add: move selected files from right listbox to left listbox
     def delete_file(self):
         # Remove from cloud storage
-        select_indices = self.listbox_cloud.curselection()
-        if select_indices:
-            for index in reversed(select_indices):
+        if self.listbox_cloud.curselection():
+            for index in self.listbox_cloud.curselection(): 
+                file_path = self.cloud_file.get_files()[index]
+            
+                if self.local_file.add_file(file_path): # True if file_path appended to cloud_file 
+                    self.listbox_added.insert(tk.END, file_path)
+                else:
+                    messagebox.showwarning("Warning", "File was not sent back!")
+            for index in reversed(self.listbox_cloud.curselection()):
                 # Ensure index is within valid range
                 if 0 <= index < self.listbox_cloud.size():
                     self.listbox_cloud.delete(index)  # Delete from cloud listbox
                     self.cloud_file.delete_file(index)  # Delete from cloud_file
                     self.pb_list.delete(index)  # Delete from playback list
-            self.instructions.configure(text="File removed from device. ", fg="darkviolet")
+            self.status.configure(text="File removed from device. ", fg="darkviolet")
         else:
             messagebox.showwarning("Warning", "Please select a file to remove from uploads!")
 
@@ -234,73 +366,15 @@ class GUI:
         file_name, file_type = os.path.splitext(file_name)
         return file_name, file_type
         
-    def playback_ui(self):
-        self.section2 = tk.Frame(self.root)
-        self.section2.pack(side=tk.LEFT, expand=True)
-        self.frame2 = tk.Frame(self.section2)
-        self.frame2.pack(pady=20, padx=20, side=tk.TOP, expand=True)
-
-        self.playback_title = tk.Label(self.frame2, text="Select file and click an action button.")
-        self.playback_title.pack(padx=20, side=tk.TOP, anchor='nw')
-        
-        # Key descriptions
-        keys_list = """Keyboard:\n \'s\' for stop\n \'q\' for black screen\n \'p\' for resume to last play"""
-        self.keys_usage = tk.Label(self.frame2, text=keys_list, justify=tk.LEFT)
-        self.keys_usage.pack(padx=20, side=tk.TOP, anchor='nw')
-
-        self.pb_list_frm = tk.Frame(self.frame2)
-        self.pb_list_frm.pack(padx=20, side=tk.TOP, fill=tk.BOTH, expand=True)
-        
-        # Listbox properties
-        self.pb_list = tk.Listbox(self.pb_list_frm, 
-                                  borderwidth=0, 
-                                  highlightthickness=0, # remove listbox border
-                                  relief=tk.FLAT, # Default: SUNKEN
-                                  selectbackground="darkviolet", # Font color
-                                  cursor="hand2") 
-        self.pb_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.pb_list.bind('<<ListboxSelect>>',self.pb_action)
-        self.pb_scroll = ttk.Scrollbar(self.pb_list_frm, style="Vertical.TScrollbar") # Define scrollbar
-        self.pb_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
-        self.pb_list.config(yscrollcommand=self.pb_scroll.set)  # Link scrollbar with listbox
-        self.pb_scroll.config(command=self.pb_list.yview) # Scrollability
-
-        self.status = tk.Label(self.frame2, text="<Nothing playing>", fg="darkviolet")
-        self.status.pack(padx=20, side=tk.TOP, anchor="nw")
-        
-        self.btn_frm = tk.Frame(self.frame2)
-        self.btn_frm.pack(padx=10, side=tk.TOP, anchor='nw', fill=tk.NONE)
-
-        self.btn_cmds =[self.pause_resume_cmd, self.restart_cmd, self.stream_cmd]
-        # create playback buttons
-        for img, cmd in zip(self.img_list, self.btn_cmds):
-            button = customtkinter.CTkButton(self.btn_frm,
-                                            width=20,
-                                            image=img, 
-                                            text=None,
-                                            cursor="hand2", 
-                                            command=cmd, 
-                                            text_color="#000000", 
-                                            fg_color="transparent", 
-                                            hover_color=self.color["orange"], 
-                                            border_width=1,
-                                            border_color=self.color["light-gray"],
-                                            border_spacing=0)
-            button.pack(pady=10, padx=10, side=tk.LEFT)
-            self.pb_buttons.append(button)
-
-        self.pb_buttons[0].configure(state="disabled", fg_color=self.color["light-gray"]) # disable pause/resume button
-        self.pb_buttons[1].configure(state="disabled", fg_color=self.color["light-gray"]) # disable restart button
-
+    
     # Enable buttons 
     def pb_action(self, event=None):
         selection = self.pb_list.curselection()
         if selection:
             index = selection[0]
             file_path = self.pb_list.get(index)            
-            status_txt = f"Selected {file_path}.\nPlay from where you left off or to play from the beginning."
+            status_txt = f"Selected \"{file_path}\". Click the button to play from where you left off or play from the beginning."
             self.status.configure(text=status_txt)
-            self.status.pack(padx=20, side=tk.TOP, anchor="nw")
             self.pb_buttons[0].configure(state="enabled", fg_color="transparent") # enable pause/resume button
             self.pb_buttons[1].configure(state="enabled", fg_color="transparent") # enable restart button
     
@@ -331,56 +405,7 @@ class GUI:
         file_path = 0 # will connect the camera
         # send file_path to the client
     
-    def control_ui(self):
-        self.frame3 = tk.Frame(self.section1)
-        self.frame3.pack(pady=20, padx=20, side=tk.TOP, expand=True)
-
-        self.ctrl_title = tk.Label(self.frame3, text="Control Panel", font=self.title_font)
-        self.ctrl_title.pack(side=tk.TOP)
-        self.ctrl_inst = tk.Label(self.frame3, text="Click on button to enable")
-        self.ctrl_inst.pack(padx=20, side=tk.TOP)
-        
-        self.ctrl_btn_frm = tk.Frame(self.frame3)
-        self.ctrl_btn_frm.pack(side=tk.TOP)
-        self.L_light = tk.Button(self.ctrl_btn_frm, text="Left light")
-        self.L_light.pack(side=tk.LEFT, padx=20, pady=20)
-        self.C_light = tk.Button(self.ctrl_btn_frm, text="Center light")
-        self.C_light.pack(side=tk.LEFT, padx=20, pady=20)
-        self.R_light = tk.Button(self.ctrl_btn_frm, text="Right light")
-        self.R_light.pack(side=tk.LEFT, padx=20, pady=20)
-
-    def select_device_ui(self):
-        self.frame4 = tk.Frame(self.section2)
-        self.frame4.pack(pady=20, padx=20, side=tk.TOP, expand=True)
-
-        self.select_device_title = tk.Label(self.frame4, text="Choose your device and click connect.")
-        self.select_device_title.pack(padx=20, side=tk.TOP, anchor='nw')
-
-        self.device_list_frm = tk.Frame(self.frame4)
-        self.device_list_frm.pack(padx=20, side=tk.TOP, fill=tk.BOTH, expand=True)
-
-        # Listbox properties
-        self.device_list = tk.Listbox(self.device_list_frm, 
-                                  borderwidth=0, 
-                                  highlightthickness=0, # remove listbox border
-                                  relief=tk.FLAT, # Default: SUNKEN
-                                  selectbackground="darkviolet", # Font color
-                                  cursor="hand2") 
-        self.device_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        self.device_list_scroll = ttk.Scrollbar(self.device_list_frm, style="Vertical.TScrollbar") # Define scrollbar
-        self.device_list_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
-        self.device_list.config(yscrollcommand=self.device_list_scroll.set)  # Link scrollbar with listbox
-        self.device_list_scroll.config(command=self.device_list.yview) # Scrollability
-
-        self.conn_device_btn = customtkinter.CTkButton(self.frame4, 
-                                                        text="Connect", 
-                                                        cursor="hand2", 
-                                                        text_color="#000000", 
-                                                        fg_color="transparent", 
-                                                        hover_color=self.color["orange"], 
-                                                        border_width=1)
-        self.conn_device_btn.pack(pady=10, padx=10, side=tk.TOP)
+    
         
         
 
