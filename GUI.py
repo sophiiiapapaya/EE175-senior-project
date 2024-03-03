@@ -4,7 +4,7 @@ from tkinter import messagebox, font, ttk
 import customtkinter
 from PIL import Image, ImageTk
 import os
-import server, client # import server.py and client.py
+import gui_client, end_device_client # import gui_client.py and end_device_client.py
 
 # create tkinter for --
 #  1. upload files/folder and playback in order
@@ -130,7 +130,8 @@ class GUI:
         self.btn_frm.pack(padx=10, side=tk.TOP, anchor='nw', fill=tk.NONE)
 
         self.btn_cmds =[self.pause_resume_cmd, self.restart_cmd, self.stream_cmd]
-        # create playback buttons
+        
+        # create playback buttons (play/pause, restart, camera)
         for img, cmd in zip(self.img_list, self.btn_cmds):
             button = customtkinter.CTkButton(self.btn_frm,
                                             width=65,
@@ -147,6 +148,7 @@ class GUI:
             button.pack(pady=10, padx=10, side=tk.LEFT)
             self.pb_buttons.append(button)
 
+        # first two buttons are disabled until files are uploaded
         self.pb_buttons[0].configure(state="disabled", fg_color=self.color["light-gray"]) # disable pause/resume button
         self.pb_buttons[1].configure(state="disabled", fg_color=self.color["light-gray"]) # disable restart button
 
@@ -377,15 +379,10 @@ class GUI:
             self.status.configure(text=status_txt)
             self.pb_buttons[0].configure(state="enabled", fg_color="transparent") # enable pause/resume button
             self.pb_buttons[1].configure(state="enabled", fg_color="transparent") # enable restart button
-    
-            if self.restart == True:
-                self.status.configure(text=(f"Playing {self.pb_list.curselection()} from the beginning"))
-                self.restart == False # set it as unclicked
                 
-                
-    # self.pb_buttons[0]
+    # self.pb_buttons[0] action
     def pause_resume_cmd(self):
-        if self.playing:
+        if self.playing: 
             self.pb_buttons[0].configure(image=self.img_list[0])
             self.playing = False
             # send pause command to server
@@ -396,7 +393,9 @@ class GUI:
 
     # self.pb_buttons[1]
     def restart_cmd(self):
-        self.restart = True
+        self.restart = True # button clicked
+        self.status.configure(text=(f"Playing {self.pb_list.curselection()} from the beginning"))
+        self.restart = False # set it as unclicked. DOUBLE CHECK THIS LINE
         # restart the selected video
       
     # self.pb_buttons[2]
