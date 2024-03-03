@@ -1,8 +1,23 @@
+# end_device_client.py
 import socket
 
-def run_end_device_client():
+def end_device_hostname():
+    hostname = socket.gethostname()
+    return hostname
+
+def connect_to_gui_client():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_ip = 'remote_server_ip'
+    
+    # char localhostname[255];
+    hostname = end_device_hostname()
+    # gui_client.get_ip_address(hostname) # pass the hostname to gui_client.py
+
+    try:
+        server_ip = socket.gethostbyname(hostname)
+        print(f'The {hostname} IP Address is {server_ip}')
+    except socket.gaierror as e:
+        print(f'Invalid hostname, error raised is {e}')
+        
     server_port = 12345
     client_socket.connect((server_ip, server_port))
     data_to_send = "Hello from end device"
@@ -12,4 +27,4 @@ def run_end_device_client():
     client_socket.close()
 
 if __name__ == "__main__":
-    run_end_device_client()
+    connect_to_gui_client()

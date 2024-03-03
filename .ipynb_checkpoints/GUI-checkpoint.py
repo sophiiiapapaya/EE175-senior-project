@@ -406,10 +406,7 @@ class GUI:
         # send file_path to the client
     
     
-        
-        
-
-# # Frame 2--change playback order
+# Frame 2--change playback order
 # order_frm = tk.Frame(master=window) 
 # order_frm.pack(fill=tk.Y, side=tk.RIGHT, expand=True)
 # order_title = tk.Label(order_frm, text="Media added", font=20).pack(padx=20, pady=10)
@@ -417,7 +414,7 @@ class GUI:
 # # list_frm = tk.Frame(order_frm)
 # # list_frm.pack(side=tk.LEFT)
         
-def main():
+def create_gui():
     # Instantiating top level 
     root = tk.Tk() 
   
@@ -438,4 +435,4 @@ def main():
     root.mainloop() # Start the application. listens for event (loop)
 
 if __name__ == "__main__": 
-    main()
+    create_gui()
