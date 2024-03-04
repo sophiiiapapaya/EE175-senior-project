@@ -421,8 +421,8 @@ class GUI:
 
     def get_host(self):
         try: 
-            self.hostname = end_device_client.end_device_hostname()
-            self.ip_address = gui_client.get_ip_address(self.hostname) # get IP fron gui_client.py
+            self.hostname, self.ip_address = end_device_client.get_hostname_ip()
+            # self.ip_address = gui_client.get_ip_address(self.hostname) # get IP fron guikee_client.py
             # gui_client.create_socket('127.0.0.1:12345') # create socket with the ip address passed
             gui_client.create_socket(self.ip_address)
             self.device_list.insert(tk.END, f"Host {self.hostname} ({self.ip_address})")
@@ -437,11 +437,13 @@ class GUI:
             device = self.device_list.get(index)            
             status_txt = f"Device selected: \"{self.hostname} ({self.ip_address})\". \nClick button to connect."
             self.device_status.configure(text=status_txt)
+            # gui_client.message_to_end_device("GUI Client received message")
 
     def connect_cmd(self):
         message = "Message from GUI client"
-        # end_device_hostname = entry_hostname.get() # Get the hostname from the entry widget
         gui_client.message_to_end_device(message)
+        status_txt = f"Connected to \"{self.hostname} ({self.ip_address})\". \nClick button to connect."
+        self.device_status.configure(text=status_txt)
         
 # Frame 2--change playback order
 # order_frm = tk.Frame(master=window) 

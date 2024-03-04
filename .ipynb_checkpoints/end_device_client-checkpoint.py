@@ -1,10 +1,14 @@
 # end_device_client.py
 import socket
 
-def end_device_hostname():
-    hostname = socket.gethostname()
-    return hostname
-
+def get_hostname_ip():
+    try:
+        hostname = socket.gethostname()
+        ip_address = socket.gethostbyname(hostname)
+        return hostname, ip_address
+    except socket.gaierror:
+        return "Unable to resolve hostname and IP address."
+        
 # def connect_to_gui_client():
 #     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     

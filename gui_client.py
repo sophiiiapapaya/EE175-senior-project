@@ -29,7 +29,7 @@ def create_socket(end_device_ip):
 
         # message = input("Enter message to send to server: ")
         
-        message_to_end_device("GUI Client received message")
+        # message_to_end_device("GUI Client received message")
 
     except Exception as e:
         print("Error:", e)
