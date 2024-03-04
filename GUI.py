@@ -77,20 +77,22 @@ class GUI:
             "red" : "#E2574C", 
             "light-gray": "#b5b5b5"
         }
-
+        
         #-------------------call ui-------------------------------
         self.playback_ui()
         self.select_device_ui()
         self.manage_file_ui()
         self.control_ui()
-        
 
+        #------------------build connection-----------------------
+        self.get_host() # Show hostname and IP in pb_list as "Host hostname (IP address)"
+    
     def load_images(self):
         for path in self.img_path_list:
             btn_image = ImageTk.PhotoImage(Image.open(path).resize((20, 20), Image.LANCZOS))
             self.img_list.append(btn_image)
         self.pause_img = ImageTk.PhotoImage(Image.open('assets/pause-img.png').resize((20, 20), Image.LANCZOS))
-
+        
     def playback_ui(self):
         self.section1 = tk.Frame(self.root)
         self.section1.pack(side=tk.LEFT, expand=True)
@@ -105,7 +107,7 @@ class GUI:
         self.playback_title.pack(padx=20, side=tk.TOP, anchor='nw')
         
         # Key descriptions
-        keys_list = """Keyboard:\n \'s\' for stop\n \'q\' for black screen\n \'p\' for resume to last play"""
+        keys_list = """Keyboard:\n \'q\' for black screen\n Any key to resume video"""
         self.keys_usage = tk.Label(self.frame1, text=keys_list, justify=tk.LEFT)
         self.keys_usage.pack(padx=20, side=tk.TOP, anchor='nw')
 
@@ -170,6 +172,8 @@ class GUI:
                                   selectbackground="darkviolet",
                                   cursor="hand2") 
         self.device_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.device_list.bind('<<ListboxSelect>>',self.connect_device)
+        # self.device_list.insert(tk.END, self.end_device_hostname)
 
         self.device_list_scroll = ttk.Scrollbar(self.device_list_frm, style="Vertical.TScrollbar") # Define scrollbar
         self.device_list_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
@@ -179,6 +183,7 @@ class GUI:
         self.conn_device_btn = customtkinter.CTkButton(self.frame3, 
                                                         text="Connect", 
                                                         cursor="hand2", 
+                                                        command=self.connect_cmd,
                                                         text_color="#000000", 
                                                         fg_color="transparent", 
                                                         hover_color=self.color["orange"], 
@@ -192,9 +197,14 @@ class GUI:
         # self.frame1.grid(row=0, column=0,pady=20, padx=20, sticky='nswe')
         self.frame2.pack(pady=20, padx=20, side=tk.TOP, expand=True, anchor="nw")
 
+        self.frame5 = tk.Frame(self.frame2)
+        self.frame5.pack(pady=20, side=tk.TOP, fill=tk.BOTH)
         self.title_font = tk.font.Font(size=20)
-        self.manage_title = tk.Label(self.frame2, text="UPLOAD YOU FILES", font=self.title_font)
-        self.manage_title.pack(pady=20, side=tk.TOP, anchor="nw")
+        self.manage_title = tk.Label(self.frame5, text="UPLOAD YOU FILES", font=self.title_font)
+        self.manage_title.pack(side=tk.LEFT, anchor="nw")
+        self.device_status = tk.Label(self.frame5, fg="darkviolet", justify=tk.LEFT)
+        self.device_status.pack(anchor="ne")
+        
         self.instructions = tk.Label(self.frame2, text="Click the button below to upload files")
         self.instructions.pack(padx=20, side=tk.TOP, anchor="nw")
 
@@ -276,12 +286,12 @@ class GUI:
         self.light_text = ["Left light", "Center light", "Right light"]
         for txt in self.light_text:
             button = customtkinter.CTkButton(self.ctrl_btn_frm, 
-                                                        text=txt, 
-                                                        cursor="hand2",  
-                                                        text_color="#000000", 
-                                                        fg_color="transparent", 
-                                                        hover_color=self.color["orange"], 
-                                                        border_width=1)
+                                             text=txt, 
+                                             cursor="hand2",  
+                                             text_color="#000000", 
+                                             fg_color="transparent", 
+                                             hover_color=self.color["orange"], 
+                                             border_width=1)
             button.pack(pady=20, padx=20, side=tk.LEFT)
             self.light_btns.append(button)
 
@@ -382,10 +392,15 @@ class GUI:
                 
     # self.pb_buttons[0] action
     def pause_resume_cmd(self):
+        # pause video
+        # send 'p' to key var (wait until any key is pressed)
         if self.playing: 
             self.pb_buttons[0].configure(image=self.img_list[0])
             self.playing = False
             # send pause command to server
+        
+        # resume video
+        # send 'r' to key var
         else:
             self.pb_buttons[0].configure(image=self.pause_img)
             self.playing = True
@@ -403,8 +418,31 @@ class GUI:
         self.status.configure(text=(f"Connecting camera to device (IP: [IP_addr])"))
         file_path = 0 # will connect the camera
         # send file_path to the client
-    
-    
+
+    def get_host(self):
+        try: 
+            self.hostname = end_device_client.end_device_hostname()
+            self.ip_address = gui_client.get_ip_address(self.hostname) # get IP fron gui_client.py
+            # gui_client.create_socket('127.0.0.1:12345') # create socket with the ip address passed
+            gui_client.create_socket(self.ip_address)
+            self.device_list.insert(tk.END, f"Host {self.hostname} ({self.ip_address})")
+            # return self.hostname, self.ip_address
+        except Exception as e:
+            print("Error:", e)
+            
+    def connect_device(self, event=None):
+        selection = self.device_list.curselection()
+        if selection:
+            index = selection[0]
+            device = self.device_list.get(index)            
+            status_txt = f"Device selected: \"{self.hostname} ({self.ip_address})\". \nClick button to connect."
+            self.device_status.configure(text=status_txt)
+
+    def connect_cmd(self):
+        message = "Message from GUI client"
+        # end_device_hostname = entry_hostname.get() # Get the hostname from the entry widget
+        gui_client.message_to_end_device(message)
+        
 # Frame 2--change playback order
 # order_frm = tk.Frame(master=window) 
 # order_frm.pack(fill=tk.Y, side=tk.RIGHT, expand=True)
@@ -412,7 +450,7 @@ class GUI:
 # order_des = tk.Label(order_frm, text="Click to instant play or move items to change the order").pack()
 # # list_frm = tk.Frame(order_frm)
 # # list_frm.pack(side=tk.LEFT)
-        
+    
 def create_gui():
     # Instantiating top level 
     root = tk.Tk() 

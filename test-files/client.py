@@ -55,5 +55,9 @@ class Client_Socket:
         
             if key == ord('q'):
                 break
+
+            if key == ord('p'):
+                cv2.waitKey(-1) # wait until any key is pressed
+                
     def close_connection(self):
         self.client_socket.close()
