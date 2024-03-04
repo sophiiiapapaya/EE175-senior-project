@@ -387,6 +387,7 @@ class GUI:
             file_path = self.pb_list.get(index)            
             status_txt = f"Selected \"{file_path}\". Click the button to play from where you left off or play from the beginning."
             self.status.configure(text=status_txt)
+            gui_client.media_to_end_device(file_path) # cap = cv2.VideoCapture(file_path)
             self.pb_buttons[0].configure(state="enabled", fg_color="transparent") # enable pause/resume button
             self.pb_buttons[1].configure(state="enabled", fg_color="transparent") # enable restart button
                 
@@ -396,15 +397,17 @@ class GUI:
         # send 'p' to key var (wait until any key is pressed)
         if self.playing: 
             self.pb_buttons[0].configure(image=self.img_list[0])
-            self.playing = False
             # send pause command to server
+            gui_client.media_to_end_device(file_path, 'p')
+            self.playing = False
         
         # resume video
-        # send 'r' to key var
-        else:
+        # send 'p' to key var
+        else: # self.playing == True
             self.pb_buttons[0].configure(image=self.pause_img)
-            self.playing = True
             # send resume command to server 
+            gui_client.playback_ctrl(self.playing, 'p') # "any key" 
+            self.playing = True
 
     # self.pb_buttons[1]
     def restart_cmd(self):
@@ -425,7 +428,7 @@ class GUI:
             # self.ip_address = gui_client.get_ip_address(self.hostname) # get IP fron guikee_client.py
             # gui_client.create_socket('127.0.0.1:12345') # create socket with the ip address passed
             gui_client.create_socket(self.ip_address)
-            self.device_list.insert(tk.END, f"Host {self.hostname} ({self.ip_address})")
+            self.device_list.insert(tk.END, f"{self.ip_address}: {self.hostname}")
             # return self.hostname, self.ip_address
         except Exception as e:
             print("Error:", e)
