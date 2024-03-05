@@ -59,7 +59,7 @@ class GUI:
         self.send_button.pack(pady=10)
 
     def browse_files(self):
-        filename = filedialog.askopenfilename(initialdir="/", title="Select File",
+        filename = filedialog.askopenfilename(title="Select File",
                                               filetypes=(("All Files", "*.*"), ("Text Files", "*.txt")))
         self.entry.delete(0, tk.END)
         self.entry.insert(tk.END, filename)
@@ -91,7 +91,8 @@ class GUI:
     def send_to_server(self, file_path):
         try:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            client_socket.connect(('192.168.1.6', 9999))
+            # client_socket.connect(('192.168.1.6', 9999))
+            client_socket.connect(('10.13.229.231', 9999))
 
             with open(file_path, 'rb') as file:
                 file_data = file.read()
