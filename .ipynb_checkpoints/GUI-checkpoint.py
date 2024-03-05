@@ -92,7 +92,7 @@ class GUI:
         self.control_ui()
 
         #------------------build connection-----------------------
-        self.get_host() # Show hostname and IP in pb_list as "Host hostname (IP address)"
+    
         self.client_socket.connect((self.ip_address, 12345))
     
     def load_images(self):
@@ -137,14 +137,6 @@ class GUI:
 
         self.btn_cmds =[self.restart_cmd, self.stream_cmd, self.stop_cmd]
         
-        # for i, img in enumerate(self.img_list):
-        #     button = tk.Button(self.btn_frm,
-        #                        image=img, 
-        #                        text=None,
-        #                        cursor="hand2", 
-        #                        command=self.btn_cmds[i])
-        #     button.pack(pady=10, padx=10, side=tk.LEFT)
-        #     self.pb_buttons.append(button)
         self.start_img = ImageTk.PhotoImage(Image.open('assets/start-img.png').resize((20, 20), Image.LANCZOS))
         restart_btn = tk.Button(self.btn_frm,
                                image=self.start_img, 
@@ -152,6 +144,14 @@ class GUI:
                                cursor="hand2", 
                                command=self.restart_cmd)
         restart_btn.pack(pady=10, padx=10, side=tk.LEFT)
+        
+        self.stop_img = ImageTk.PhotoImage(Image.open('assets/stop-img.png').resize((20, 20), Image.LANCZOS))
+        stop_btn = tk.Button(self.btn_frm,
+                               image=self.stop_img, 
+                               text="Stop",
+                               cursor="hand2", 
+                               command=self.stop_cmd)
+        stop_btn.pack(pady=10, padx=10, side=tk.LEFT)
 
     def select_device_ui(self):
         self.frame3 = tk.Frame(self.section1)
@@ -178,6 +178,8 @@ class GUI:
         self.device_list_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
         self.device_list.config(yscrollcommand=self.device_list_scroll.set)  # Link scrollbar with listbox
         self.device_list_scroll.config(command=self.device_list.yview) # Scrollability
+        self.hostname, self.ip_address = end_device_client.get_hostname_ip()
+        self.device_list.insert(tk.END, f"{self.ip_address}: {self.hostname}")
 
         self.conn_device_btn = customtkinter.CTkButton(self.frame3, 
                                                         text="Connect", 
@@ -388,27 +390,6 @@ class GUI:
             self.shortened_path = f"{file_name}{file_type}"
             status_txt = f"Selected \"{self.shortened_path}\". Click the button to play from where you left off or play from the beginning."
             self.status.configure(text=status_txt)
-            # self.pb_buttons[0].configure(fg_color="transparent") # enable restart button
-                
-    # # self.pb_buttons[0] action
-    # def pause_resume_cmd(self):
-    #     # pause video
-    #     # send 'p' to key var (wait until any key is pressed)
-    #     if self.playing: 
-    #         self.pb_buttons[0].configure(image=self.img_list[0])
-    #         self.status.configure(text=(f"Paused \"{self.shortened_path}\""))
-    #         # send pause command to server
-    #         gui_client.playback_ctrl()
-    #         self.playing = False
-        
-    #     # resume video
-    #     # send 'p' to key var
-    #     else: # self.playing == False (paused == True)
-    #         self.pb_buttons[0].configure(image=self.pause_img)
-    #         self.status.configure(text=(f"Resumed \"{self.shortened_path}\""))
-    #         # send resume command to server 
-    #         gui_client.playback_ctrl() # "any key" 
-    #         self.playing = True
 
     # self.pb_buttons[1]
     def restart_cmd(self):
@@ -416,29 +397,17 @@ class GUI:
         status_txt = f"Playing \"self.shortened_path\" from the beginning"
         self.status.configure(text=status_txt)
         # restart the selected video
-        self.media_to_end_device() # Send the new/selected path to server
+        self.media_to_end_device(self.sending_path) # Send the new/selected path to server
       
     # self.pb_buttons[2]
     def stream_cmd(self):
-        self.status.configure(text=(f"Connecting camera to device (IP: [IP_addr])"))
-        if not self.playing:
-            self.playing = True
+        self.status.configure(text="Connecting camera to device")
         file_path = 0 # will connect the camera
-        gui_client.media_to_end_device(self.sending_path)
-        gui_client.playback_ctrl() # any key (playback and not sending command)
+        self.media_to_end_device(file_path)
 
     def stop_cmd(self):
-        gui_client.playback_ctrl('q')
-        self.playing = False
+        self.client_socket.sendall("Quit".encode('utf-8'))
 
-    def get_host(self):
-        try: 
-            self.hostname, self.ip_address = end_device_client.get_hostname_ip()
-            self.device_list.insert(tk.END, f"{self.ip_address}: {self.hostname}")
-            # return self.hostname, self.ip_address
-        except Exception as e:
-            print("Error:", e)
-            
     def connect_device(self, event=None):
         selection = self.device_list.curselection()
         if selection:
@@ -453,20 +422,23 @@ class GUI:
         status_txt = f"Connected to \"{self.hostname} ({self.ip_address})\". \nClick button to connect."
         self.device_status.configure(text=status_txt)
             
-    def media_to_end_device(self):
+    def media_to_end_device(self, file_path):
         try:        
-            self.client_socket.sendall(self.sending_path.encode('utf-8'))
+            self.client_socket.sendall(file_path.encode('utf-8'))
             
-            cap = cv2.VideoCapture(self.sending_path)
+            cap = cv2.VideoCapture(file_path)
             paused = False
             
             while cap.isOpened():
+                key = cv2.waitKey(1) & 0xFF
                 if not paused:
                     ret, frame = cap.read()
                     if not ret:
                         print("Video finished.")
                         break
-                        
+
+                    cv2.imshow('Video sending', frame)
+                    
                     codedFrame = pickle.dumps(frame)
                     msg = struct.pack("Q", len(codedFrame)) + codedFrame
                     try:
@@ -476,14 +448,12 @@ class GUI:
                         cap.release()
                         self.client_socket.close()
                     
-                    cv2.imshow('Video sending', frame)
-
-                if cv2.waitKey(25) & 0xFF == ord('q'):
+                if key == ord('q'):
                     message = "Quit"
                     print(message)
                     self.client_socket.sendall(message.encode('utf-8'))
                     break
-                elif cv2.waitKey(25) & 0xFF == ord('p'):
+                elif key == ord('p'):
                     if paused:
                         paused = False
                         message = "Play"
