@@ -4,7 +4,8 @@ from tkinter import messagebox, font, ttk
 import customtkinter
 from PIL import Image, ImageTk
 import os
-import gui_client, end_device_client # import gui_client.py and end_device_client.py
+import gui_client, end_device_client# import gui_client.py and end_device_client.py
+import cv2, pickle, struct, socket
 
 # create tkinter for --
 #  1. upload files/folder and playback in order
@@ -57,11 +58,12 @@ class GUI:
         self.cloud_file = Cloud_File()
         # self.server_socket = server.Server_Socket()
         # self.server_socket.connect_client()
+        # Create a socket object
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #-------------------variables---------------------------
         self.playing = False # initial state: all paused
-        self.restart = False
         self.start_stream = False 
-        self.img_path_list = ['assets/play-img.png','assets/start-img.png', 'assets/stream-img.png']
+        self.img_path_list = ['assets/start-img.png', 'assets/stream-img.png', 'assets/stop-img.png']
         self.img_list = []
         self.pb_buttons = []
         self.light_btns = []
@@ -79,8 +81,13 @@ class GUI:
         }
         
         #-------------------call ui-------------------------------
-        self.playback_ui()
+        self.section1 = tk.Frame(self.root)
+        self.section1.pack(side=tk.LEFT, expand=True)
+        self.status = tk.Label(self.section1, text="<Nothing playing>", fg="darkviolet", wraplength=245, justify=tk.LEFT)
+        self.status.pack(padx=20, side=tk.TOP, anchor="n")
+        
         self.select_device_ui()
+        self.playback_ui()
         self.manage_file_ui()
         self.control_ui()
 
@@ -94,10 +101,6 @@ class GUI:
         self.pause_img = ImageTk.PhotoImage(Image.open('assets/pause-img.png').resize((20, 20), Image.LANCZOS))
         
     def playback_ui(self):
-        self.section1 = tk.Frame(self.root)
-        self.section1.pack(side=tk.LEFT, expand=True)
-        self.status = tk.Label(self.section1, text="<Nothing playing>", fg="darkviolet", wraplength=245, justify=tk.LEFT)
-        self.status.pack(padx=20, side=tk.TOP, anchor="n")
         
         self.frame1 = tk.Frame(self.section1)
         self.frame1.pack(pady=20, padx=20, side=tk.TOP, expand=True)
@@ -107,7 +110,7 @@ class GUI:
         self.playback_title.pack(padx=20, side=tk.TOP, anchor='nw')
         
         # Key descriptions
-        keys_list = """Keyboard:\n \'q\' for black screen\n Any key to resume video"""
+        keys_list = """Keyboard:\n \'p\' to pause\n \'q\' to end\n Any key to resume video"""
         self.keys_usage = tk.Label(self.frame1, text=keys_list, justify=tk.LEFT)
         self.keys_usage.pack(padx=20, side=tk.TOP, anchor='nw')
 
@@ -131,28 +134,36 @@ class GUI:
         self.btn_frm = tk.Frame(self.frame1)
         self.btn_frm.pack(padx=10, side=tk.TOP, anchor='nw', fill=tk.NONE)
 
-        self.btn_cmds =[self.pause_resume_cmd, self.restart_cmd, self.stream_cmd]
+        self.btn_cmds =[self.restart_cmd, self.stream_cmd, self.stop_cmd]
         
         # create playback buttons (play/pause, restart, camera)
-        for img, cmd in zip(self.img_list, self.btn_cmds):
-            button = customtkinter.CTkButton(self.btn_frm,
-                                            width=65,
-                                            image=img, 
-                                            text=None,
-                                            cursor="hand2", 
-                                            command=cmd, 
-                                            text_color="#000000", 
-                                            fg_color="transparent", 
-                                            hover_color=self.color["orange"], 
-                                            border_width=1,
-                                            border_color=self.color["light-gray"],
-                                            border_spacing=0)
+        # for img, cmd in zip(self.img_list, self.btn_cmds):
+        #     button = customtkinter.CTkButton(self.btn_frm,
+        #                                     width=65,
+        #                                     image=img, 
+        #                                     text=None,
+        #                                     cursor="hand2", 
+        #                                     command=cmd, 
+        #                                     text_color="#000000", 
+        #                                     fg_color="transparent", 
+        #                                     hover_color=self.color["orange"], 
+        #                                     border_width=1,
+        #                                     border_color=self.color["light-gray"],
+        #                                     border_spacing=0)
+        #     button.pack(pady=10, padx=10, side=tk.LEFT)
+        #     self.pb_buttons.append(button)
+        for i, img in enumerate(self.img_list):
+            button = tk.Button(self.btn_frm,
+                               image=img, 
+                               text=None,
+                               cursor="hand2", 
+                               command=self.btn_cmds[i])
             button.pack(pady=10, padx=10, side=tk.LEFT)
             self.pb_buttons.append(button)
 
         # first two buttons are disabled until files are uploaded
-        self.pb_buttons[0].configure(state="disabled", fg_color=self.color["light-gray"]) # disable pause/resume button
-        self.pb_buttons[1].configure(state="disabled", fg_color=self.color["light-gray"]) # disable restart button
+        # self.pb_buttons[0].configure(fg_color=self.color["light-gray"], image=self.img_list[0]) # disable pause/resume button
+        # self.pb_buttons[0].configure(fg_color=self.color["light-gray"]) # disable restart button            
 
     def select_device_ui(self):
         self.frame3 = tk.Frame(self.section1)
@@ -337,7 +348,7 @@ class GUI:
                 if self.cloud_file.add_file(file_path): # True if file_path appended to cloud_file 
                     self.listbox_cloud.insert(tk.END, file_path)
                     # update playback list
-                    file_name, file_type = self.get_filename_ext(file_path, index) # shortened to filename.ext
+                    file_name, file_type = self.get_filename_ext(file_path) # shortened to filename.ext
                     self.pb_list.insert(tk.END, f"{file_name}{file_type}")
                 else:
                     messagebox.showwarning("Warning", "File did not send!")
@@ -372,7 +383,7 @@ class GUI:
         else:
             messagebox.showwarning("Warning", "Please select a file to remove from uploads!")
 
-    def get_filename_ext(self, file_path, index):
+    def get_filename_ext(self, file_path):
         # Extract file names and extensions from paths
         file_name = os.path.basename(file_path)
         file_name, file_type = os.path.splitext(file_name)
@@ -384,50 +395,64 @@ class GUI:
         selection = self.pb_list.curselection()
         if selection:
             index = selection[0]
-            file_path = self.pb_list.get(index)            
-            status_txt = f"Selected \"{file_path}\". Click the button to play from where you left off or play from the beginning."
+            self.sending_path = self.cloud_file.get_files()[index]    
+            file_name, file_type = self.get_filename_ext(self.sending_path)
+            self.shortened_path = f"{file_name}{file_type}"
+            status_txt = f"Selected \"{self.shortened_path}\". Click the button to play from where you left off or play from the beginning."
             self.status.configure(text=status_txt)
-            gui_client.media_to_end_device(file_path) # cap = cv2.VideoCapture(file_path)
-            self.pb_buttons[0].configure(state="enabled", fg_color="transparent") # enable pause/resume button
-            self.pb_buttons[1].configure(state="enabled", fg_color="transparent") # enable restart button
+            # self.pb_buttons[0].configure(fg_color="transparent") # enable restart button
                 
-    # self.pb_buttons[0] action
-    def pause_resume_cmd(self):
-        # pause video
-        # send 'p' to key var (wait until any key is pressed)
-        if self.playing: 
-            self.pb_buttons[0].configure(image=self.img_list[0])
-            # send pause command to server
-            gui_client.media_to_end_device(file_path, 'p')
-            self.playing = False
+    # # self.pb_buttons[0] action
+    # def pause_resume_cmd(self):
+    #     # pause video
+    #     # send 'p' to key var (wait until any key is pressed)
+    #     if self.playing: 
+    #         self.pb_buttons[0].configure(image=self.img_list[0])
+    #         self.status.configure(text=(f"Paused \"{self.shortened_path}\""))
+    #         # send pause command to server
+    #         gui_client.playback_ctrl()
+    #         self.playing = False
         
-        # resume video
-        # send 'p' to key var
-        else: # self.playing == True (paused == False)
-            self.pb_buttons[0].configure(image=self.pause_img)
-            # send resume command to server 
-            gui_client.playback_ctrl(self.playing, 'p') # "any key" 
-            self.playing = True
+    #     # resume video
+    #     # send 'p' to key var
+    #     else: # self.playing == False (paused == True)
+    #         self.pb_buttons[0].configure(image=self.pause_img)
+    #         self.status.configure(text=(f"Resumed \"{self.shortened_path}\""))
+    #         # send resume command to server 
+    #         gui_client.playback_ctrl() # "any key" 
+    #         self.playing = True
 
     # self.pb_buttons[1]
     def restart_cmd(self):
-        self.restart = True # button clicked
-        self.status.configure(text=(f"Playing {self.pb_list.curselection()} from the beginning"))
-        self.restart = False # set it as unclicked. DOUBLE CHECK THIS LINE
+        file_path = 'sample-media/sample-vid-2.mp4'
+        file_name, file_type = self.get_filename_ext(file_path)
+        status_txt = f"Playing \"{file_name}{file_type}\" from the beginning"
+        self.status.configure(text=status_txt)
         # restart the selected video
+        if not self.playing:
+            self.playing = True
+        self.media_to_end_device(file_path) # Send the new/selected path to server
+        # gui_client.playback_ctrl() # any key (playback and not sending command)
       
     # self.pb_buttons[2]
     def stream_cmd(self):
         self.status.configure(text=(f"Connecting camera to device (IP: [IP_addr])"))
+        if not self.playing:
+            self.playing = True
         file_path = 0 # will connect the camera
-        # send file_path to the client
+        gui_client.media_to_end_device(self.sending_path)
+        gui_client.playback_ctrl() # any key (playback and not sending command)
+
+    def stop_cmd(self):
+        gui_client.playback_ctrl('q')
+        self.playing = False
 
     def get_host(self):
         try: 
             self.hostname, self.ip_address = end_device_client.get_hostname_ip()
             # self.ip_address = gui_client.get_ip_address(self.hostname) # get IP fron guikee_client.py
             # gui_client.create_socket('127.0.0.1:12345') # create socket with the ip address passed
-            gui_client.create_socket(self.ip_address)
+            # self.create_socket()
             self.device_list.insert(tk.END, f"{self.ip_address}: {self.hostname}")
             # return self.hostname, self.ip_address
         except Exception as e:
@@ -444,17 +469,60 @@ class GUI:
 
     def connect_cmd(self):
         message = "Message from GUI client"
-        gui_client.message_to_end_device(message)
+        # self.media_to_end_device(message)
         status_txt = f"Connected to \"{self.hostname} ({self.ip_address})\". \nClick button to connect."
         self.device_status.configure(text=status_txt)
+            
+    def media_to_end_device(self,file_path):
+        try:        
+            self.client_socket.connect((self.ip_address, 12345))
+            self.client_socket.sendall(file_path.encode('utf-8'))
+            
+            cap = cv2.VideoCapture(file_path)
+            paused = False
+            
+            while cap.isOpened():
+                if not paused:
+                    ret, frame = cap.read()
+                    if not ret:
+                        print("Video finished.")
+                        break
+                        
+                    # codedFrame = pickle.dumps(frame)
+                    # msg = struct.pack("Q", len(codedFrame)) + codedFrame
+                    # try:
+                    #     client_socket.sendall(msg)
+                    # except Exception:
+                    #     print("Connection lost, exiting stream")
+                    #     cap.release()
+                    #     client_socket.close()
         
-# Frame 2--change playback order
-# order_frm = tk.Frame(master=window) 
-# order_frm.pack(fill=tk.Y, side=tk.RIGHT, expand=True)
-# order_title = tk.Label(order_frm, text="Media added", font=20).pack(padx=20, pady=10)
-# order_des = tk.Label(order_frm, text="Click to instant play or move items to change the order").pack()
-# # list_frm = tk.Frame(order_frm)
-# # list_frm.pack(side=tk.LEFT)
+                    cv2.imshow('Video sending', frame)
+                if cv2.waitKey(25) & 0xFF == ord('q'):
+                    message = "Quit"
+                    print(message)
+                    self.client_socket.sendall(message.encode('utf-8'))
+                    break
+                elif cv2.waitKey(25) & 0xFF == ord('p'):
+                    if paused:
+                        paused = False
+                        message = "Play"
+                    else:
+                        paused = True
+                        message = "Pause"
+                        print(message)
+                        cv2.waitKey(-1) # wait until any key is pressed
+                        if key == ord(cmd):  # 'p' Pause or resume the video
+                            paused = False
+                            message = "Play"
+                    self.client_socket.sendall(message.encode('utf-8'))
+
+            # Release resources
+            cap.release()
+            cv2.destroyAllWindows()
+            self.client_socket.close()
+        except Exception as e:
+            print("Error:", e)
     
 def create_gui():
     # Instantiating top level 

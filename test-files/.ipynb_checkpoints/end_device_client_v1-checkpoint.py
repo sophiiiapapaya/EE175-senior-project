@@ -1,24 +1,27 @@
-# server.py -- receive frame
+# end_device_client.py -- receive frames
 import socket
 import cv2
+import pickle
+import struct
 
-def receive_video_path(client_socket):
-    video_path = client_socket.recv(1024).decode('utf-8')
-    print("Received video path from client:", video_path)
-    return video_path
+WIN_NAME = "Video received"
 
-def get_hostname_ip():
-    try:
-        hostname = socket.gethostname()
-        ip_address = socket.gethostbyname(hostname)
-        return hostname, ip_address
-    except socket.gaierror:
-        return "Unable to resolve hostname and IP address."
-        
+# def receive_msg(client_socket):
+#     # Receive data from GUI client
+#     data = client_socket.recv(1024).decode('utf-8')
+#     if not data:
+#         return
+#     print("Received from GUI client:", data)
+#     if data == "Message from GUI client":
+#         # Send response back to GUI client
+#         response = "Message received by end device"
+#         client_socket.sendall(response.encode('utf-8'))
+#     else:
+#         return data
+
 def start_end_device_server():
-    # cap = cv2.VideoCapture(video_path)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_ip = '0.0.0.0'  # All available interfaces
+    server_ip = '0.0.0.0' # All availabe interfaces
     server_port = 12345  # Choose a different port for the server
     server_socket.bind((server_ip, server_port))
     server_socket.listen(1)  # Listen for one incoming connection
@@ -27,43 +30,49 @@ def start_end_device_server():
 
     while True:
         client_socket, addr = server_socket.accept()
-        print('Connected to client:', addr)
-        video_path = receive_video_path(client_socket)
+        print('Connected to GUI client:', addr)
+        # data = receive_msg(client_socket)
+        video_path = client_socket.recv(1024).decode('utf-8')
+        print("Received from GUI client:",video_path)
         cap = cv2.VideoCapture(video_path)
-
-        paused = False
-
+        
+        paused = False            
+                
         while cap.isOpened():
             if not paused:
                 ret, frame = cap.read()
                 if not ret:
+                    print("Video finished.")
                     break
-                # cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
-                # cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-                cv2.imshow('Video received', frame)
+                            
+                # Full screen
+                cv2.namedWindow(WIN_NAME, cv2.WND_PROP_FULLSCREEN)
+                cv2.setWindowProperty(WIN_NAME, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+                cv2.imshow(WIN_NAME, frame)
                 
-            key = cv2.waitKey(25)
-                # # Send frame to client
-                # _, buffer = cv2.imencode('.jpg', frame)
-                # data = buffer.tobytes()
-                # client_socket.sendall(data)
-
             # Receive message from client
             message = client_socket.recv(1024).decode('utf-8')
             if message == "Pause":
                 cv2.waitKey(-1) # wait until any key is pressed
                 paused = True
             elif message == "Play":
-                key = ord('r')
+                cv2.waitKey(25) & 0xFF == ord('p')
                 paused = False
             elif message == "Quit":
                 break
-
+                    
         cap.release()
         cv2.destroyAllWindows()
         client_socket.close()
+    server_socket.close()
 
-        server_socket.close()
+def get_hostname_ip():
+    try:
+        hostname = socket.gethostname()
+        ip_address = socket.gethostbyname(hostname)
+        return hostname, ip_address
+    except socket.gaierror:
+        return "Unable to resolve hostname and IP address."
 
 # def receive_media(paused):
     # data = b""
@@ -104,7 +113,5 @@ def start_end_device_server():
     # cv2.imshow(WIN_NAME, frame)
     
 
-
 if __name__ == "__main__":
-    # video_path = 'sample-media/sample-vid-3.mp4'
     start_end_device_server()

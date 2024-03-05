@@ -1,3 +1,4 @@
+# client.py -- send frame
 import socket
 import cv2
 
@@ -5,6 +6,7 @@ def play_video(video_path, server_address, server_port):
     cap = cv2.VideoCapture(video_path)
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((server_address, server_port))
+    client_socket.sendall(video_path.encode('utf-8'))
     paused = False
 
     while cap.isOpened():
