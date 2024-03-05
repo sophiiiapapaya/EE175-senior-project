@@ -467,16 +467,17 @@ class GUI:
                         print("Video finished.")
                         break
                         
-                    # codedFrame = pickle.dumps(frame)
-                    # msg = struct.pack("Q", len(codedFrame)) + codedFrame
-                    # try:
-                    #     client_socket.sendall(msg)
-                    # except Exception:
-                    #     print("Connection lost, exiting stream")
-                    #     cap.release()
-                    #     client_socket.close()
-        
+                    codedFrame = pickle.dumps(frame)
+                    msg = struct.pack("Q", len(codedFrame)) + codedFrame
+                    try:
+                        self.client_socket.sendall(msg)
+                    except Exception:
+                        print("Connection lost, exiting stream")
+                        cap.release()
+                        self.client_socket.close()
+                    
                     cv2.imshow('Video sending', frame)
+
                 if cv2.waitKey(25) & 0xFF == ord('q'):
                     message = "Quit"
                     print(message)
@@ -484,17 +485,18 @@ class GUI:
                     break
                 elif cv2.waitKey(25) & 0xFF == ord('p'):
                     if paused:
-                        # cv2.waitKey(25) & 0xFF
                         paused = False
                         message = "Play"
+                        # # Send frame to client
+                        # _, buffer = cv2.imencode('.jpg', frame)
+                        # data = buffer.tobytes()
+                        # self.client_socket.sendall(data)
+                        print(message)
                     else:
                         paused = True
                         message = "Pause"
                         print(message)
                         cv2.waitKey(-1) # wait until any key is pressed
-                        # if key == ord(cmd):  # 'p' Pause or resume the video
-                        #     paused = False
-                        #     message = "Play"
                     self.client_socket.sendall(message.encode('utf-8'))
 
             # Release resources

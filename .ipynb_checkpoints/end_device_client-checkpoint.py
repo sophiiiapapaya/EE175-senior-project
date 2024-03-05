@@ -1,6 +1,6 @@
 # server.py -- receive frame
-import socket
-import cv2
+import socket,cv2, pickle, struct
+
 
 def receive_video_path(client_socket):
     video_path = client_socket.recv(1024).decode('utf-8')
@@ -28,40 +28,46 @@ def start_end_device_server():
     while True:
         client_socket, addr = server_socket.accept()
         print('Connected to client:', addr)
-        video_path = receive_video_path(client_socket)
-        cap = cv2.VideoCapture(video_path)
-
+        data = b""
+        payload_size = struct.calcsize("Q")
         paused = False
+        
+        while True:
+            while len(data) < payload_size:
+                packet = client_socket.recv(41024) # 4K
+                if not packet: break
+                data+=packet
+            packed_msg_size = data[:payload_size]
+            data = data[payload_size:]
+            msg_size = struct.unpack("Q",packed_msg_size)[0]
+				
+            while len(data) < msg_size:
+                data += client_socket.recv(41024)
+                if not packet: break
+                data+=packet
+            frame_data = data[:msg_size]
+            data  = data[msg_size:]
+            frame = pickle.loads(frame_data)
 
-        while cap.isOpened():
-            if not paused:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                # cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
-                # cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-                cv2.imshow('Video received', frame)
-                
-            # key = cv2.waitKey(25)
-                # # Send frame to client
-                # _, buffer = cv2.imencode('.jpg', frame)
-                # data = buffer.tobytes()
-                # client_socket.sendall(data)
+            # cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
+            # cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            cv2.imshow('Video received', frame)
 
-            # Receive message from client
-            message = client_socket.recv(1024).decode('utf-8')
-            if message == "Pause":
-                print(message)
-                cv2.waitKey(-1) # wait until any key is pressed
-                paused = True
-                
-            elif message == "Play":
-                print(message)
-                paused = False
-            elif message == "Quit":
+            if message == "Quit":
                 print(message)
                 break
 
+            # if client_socket.poll(0): # Non-blocking check for incoming data
+            #     # Receive message from client
+            #     message = client_socket.recv(1024).decode('utf-8')
+            #     if message == "Pause":
+            #         print(message)
+            #         cv2.waitKey(-1) # wait until any key is pressed
+            #         paused = True
+            #     elif message == "Play":
+            #         print(message)
+            #         paused = False
+            
         cap.release()
         cv2.destroyAllWindows()
         client_socket.close()
