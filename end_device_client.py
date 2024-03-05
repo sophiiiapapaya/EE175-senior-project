@@ -42,7 +42,7 @@ def start_end_device_server():
                 # cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
                 cv2.imshow('Video received', frame)
                 
-            key = cv2.waitKey(25)
+            # key = cv2.waitKey(25)
                 # # Send frame to client
                 # _, buffer = cv2.imencode('.jpg', frame)
                 # data = buffer.tobytes()
@@ -51,19 +51,22 @@ def start_end_device_server():
             # Receive message from client
             message = client_socket.recv(1024).decode('utf-8')
             if message == "Pause":
+                print(message)
                 cv2.waitKey(-1) # wait until any key is pressed
                 paused = True
+                
             elif message == "Play":
-                key = ord('r')
+                print(message)
                 paused = False
             elif message == "Quit":
+                print(message)
                 break
 
         cap.release()
         cv2.destroyAllWindows()
         client_socket.close()
 
-        server_socket.close()
+    server_socket.close()
 
 # def receive_media(paused):
     # data = b""
