@@ -1,6 +1,8 @@
 # server.py -- receive frame
 import socket
 import cv2
+import struct
+import pickle
 
 def receive_video_path(client_socket):
     video_path = client_socket.recv(1024).decode('utf-8')
@@ -18,10 +20,11 @@ def get_hostname_ip():
 def start_end_device_server():
     # cap = cv2.VideoCapture(video_path)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # server_ip = '10.13.229.231'
     server_ip = '0.0.0.0'  # All available interfaces
     server_port = 12345  # Choose a different port for the server
     server_socket.bind((server_ip, server_port))
-    server_socket.listen(1)  # Listen for one incoming connection
+    server_socket.listen()  # Listen for one incoming connection
     
     print(f"End device server listening on {server_ip}:{server_port}")
 
@@ -34,34 +37,25 @@ def start_end_device_server():
         paused = False
 
         while cap.isOpened():
-            if not paused:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                # cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
-                # cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-                cv2.imshow('Video received', frame)
-                
-            # key = cv2.waitKey(25)
-                # # Send frame to client
-                # _, buffer = cv2.imencode('.jpg', frame)
-                # data = buffer.tobytes()
-                # client_socket.sendall(data)
-
-            # Receive message from client
-            message = client_socket.recv(1024).decode('utf-8')
-            if message == "Pause":
-                print(message)
-                cv2.waitKey(-1) # wait until any key is pressed
-                paused = True
-                
-            elif message == "Play":
-                print(message)
-                paused = False
-            elif message == "Quit":
-                print(message)
+            ret, frame = cap.read()
+            if not ret:
                 break
-
+            if not paused:
+                cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
+                cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+                cv2.imshow('Video received', frame)
+            key = cv2.waitKey(25)
+            if key == ord('q'):  # Quit if 'q' is pressed
+                break
+            elif key == ord('p'):  # Pause if 'p' is pressed
+                print("Pausing video.")
+                cv2.waitKey(-1)  # Wait until any key is pressed
+                paused = True
+                print("Video paused.")
+            elif key == ord('r'):  # Resume if 'r' is pressed
+                paused = False
+                print("Resuming video.")
+                
         cap.release()
         cv2.destroyAllWindows()
         client_socket.close()

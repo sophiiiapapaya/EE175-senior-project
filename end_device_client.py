@@ -20,10 +20,11 @@ def get_hostname_ip():
 def start_end_device_server():
     # cap = cv2.VideoCapture(video_path)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # server_ip = '10.13.229.231'
     server_ip = '0.0.0.0'  # All available interfaces
     server_port = 12345  # Choose a different port for the server
     server_socket.bind((server_ip, server_port))
-    server_socket.listen(1)  # Listen for one incoming connection
+    server_socket.listen()  # Listen for one incoming connection
     
     print(f"End device server listening on {server_ip}:{server_port}")
 
@@ -40,6 +41,8 @@ def start_end_device_server():
             if not ret:
                 break
             if not paused:
+                cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
+                cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
                 cv2.imshow('Video received', frame)
             key = cv2.waitKey(25)
             if key == ord('q'):  # Quit if 'q' is pressed
