@@ -2,7 +2,6 @@
 import time
 import GUI, gui_client, end_device_client
 import tkinter as tk
-# from gui import GUI
 
 def start_gui_client():
     # Start the GUI client
