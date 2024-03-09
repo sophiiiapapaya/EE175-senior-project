@@ -3,13 +3,6 @@ import socket
 import cv2
 import struct
 import pickle
-
-def create_server_socket():
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # server_ip = '10.13.229.231'
-    server_ip = '0.0.0.0'  # All available interfaces on the same machine, for testing
-    server_port = 12345  # Choose a different port for the server
-    server_socket.bind((server_ip, server_port))
     
 def get_hostname_ip():
     try:
@@ -20,6 +13,11 @@ def get_hostname_ip():
         return "Unable to resolve hostname and IP address."
         
 def start_end_device_server():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # server_ip = '10.13.229.231'
+    server_ip = '0.0.0.0'  # All available interfaces on the same machine, for testing
+    server_port = 12345  # Choose a different port for the server
+    server_socket.bind((server_ip, server_port))
     server_socket.listen()  # Listen for one incoming connection
     
     print(f"End device server listening on {server_ip}:{server_port}")
@@ -149,5 +147,4 @@ def playback(file_name, cmd):
 
 if __name__ == "__main__":
     # video_path = 'sample-media/sample-vid-3.mp4'
-    creat_server_socket()
     start_end_device_server()
