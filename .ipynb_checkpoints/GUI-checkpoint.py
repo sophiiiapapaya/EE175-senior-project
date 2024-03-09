@@ -504,7 +504,7 @@ from tkinter import messagebox, font, ttk
 import customtkinter
 from PIL import Image, ImageTk
 import os
-# import end_device_client# import gui_client.py and end_device_client.py
+import end_device_client_1 # import gui_client.py and end_device_client.py
 import cv2, pickle, struct, socket
 
 class Local_File:
@@ -587,7 +587,9 @@ class GUI:
 
         #------------------build connection-----------------------
         # self.get_host() # Show hostname and IP in pb_list as "Host hostname (IP address)"
-        self.client_socket.connect(('10.13.214.63', 12345))
+        # self.client_socket.connect(('10.13.214.63', 12345))
+        self.hostname, self.ip_address = end_device_client_1.get_hostname_ip()
+        self.client_socket.connect((self.ip_address, 12345))
     
     def load_images(self):
         for path in self.img_path_list:
@@ -888,6 +890,7 @@ class GUI:
             # to the given path from the  
             # the given start directory. 
             self.relative_path = os.path.relpath(path, start) 
+            
             print(path)
             print(start)
             print(self.relative_path)
@@ -931,20 +934,10 @@ class GUI:
         if not self.playing:
             self.playing = True
         file_path = 0 # will connect the camera
-        gui_client.media_to_end_device(self.sending_path)
-        gui_client.playback_ctrl() # any key (playback and not sending command)
 
     def stop_cmd(self):
         gui_client.playback_ctrl('q')
         self.playing = False
-
-    # def get_host(self):
-    #     try: 
-    #         self.hostname, self.ip_address = end_device_client.get_hostname_ip()
-    #         self.device_list.insert(tk.END, f"{self.ip_address}: {self.hostname}")
-    #         # return self.hostname, self.ip_address
-    #     except Exception as e:
-    #         print("Error:", e)
             
     def connect_device(self, event=None):
         selection = self.device_list.curselection()

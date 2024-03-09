@@ -4,6 +4,7 @@ from tkinter import messagebox, font, ttk
 import customtkinter
 from PIL import Image, ImageTk
 import os
+
 import end_device_client # import gui_client.py and end_device_client.py
 import cv2, pickle, struct, socket
 
@@ -88,6 +89,7 @@ class GUI:
         self.control_ui()
 
         #------------------build connection-----------------------
+
         self.hostname, self.ip_address = end_device_client.get_hostname_ip() # uncomment when testing on the same machine
         # self.client_socket.connect(('10.13.214.63', 12345))
         self.client_socket.connect((self.ip_address, 12345))
