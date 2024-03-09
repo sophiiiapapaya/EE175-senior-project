@@ -4,11 +4,13 @@ import cv2
 import struct
 import pickle
 
-def receive_video_path(client_socket):
-    video_path = client_socket.recv(1024).decode('utf-8')
-    print("Received video path from client:", video_path)
-    return video_path
-
+def create_server_socket():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # server_ip = '10.13.229.231'
+    server_ip = '0.0.0.0'  # All available interfaces on the same machine, for testing
+    server_port = 12345  # Choose a different port for the server
+    server_socket.bind((server_ip, server_port))
+    
 def get_hostname_ip():
     try:
         hostname = socket.gethostname()
@@ -18,90 +20,134 @@ def get_hostname_ip():
         return "Unable to resolve hostname and IP address."
         
 def start_end_device_server():
-    # cap = cv2.VideoCapture(video_path)
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # server_ip = '10.13.229.231'
-    server_ip = '0.0.0.0'  # All available interfaces
-    server_port = 12345  # Choose a different port for the server
-    server_socket.bind((server_ip, server_port))
     server_socket.listen()  # Listen for one incoming connection
     
     print(f"End device server listening on {server_ip}:{server_port}")
+    
+    client_socket, addr = server_socket.accept() # Listening from the same client
+    print('Connected to client:', addr)
 
     while True:
-        client_socket, addr = server_socket.accept()
-        print('Connected to client:', addr)
-        video_path = receive_video_path(client_socket)
-        cap = cv2.VideoCapture(video_path)
+        
+        # message = receive_message(client_socket) # get filename from client
+        # print(message)
 
-        paused = False
+        # if not message is type file data:
+        file_data = receive_file(client_socket)
 
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                break
-            if not paused:
-                cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
-                cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-                cv2.imshow('Video received', frame)
-            key = cv2.waitKey(25)
-            if key == ord('q'):  # Quit if 'q' is pressed
-                break
-            elif key == ord('p'):  # Pause if 'p' is pressed
-                print("Pausing video.")
-                cv2.waitKey(-1)  # Wait until any key is pressed
-                paused = True
-                print("Video paused.")
-            elif key == ord('r'):  # Resume if 'r' is pressed
-                paused = False
-                print("Resuming video.")
+        message = receive_message(client_socket) # get filename from client
+        print(message)
+
+        # elif message is type file_name:
+
+        # Save received file.
+        file_name = message
+        save_file(file_data, file_name) # write file(s) to server machine. need to return data?
+
+        cmd = message
+        playback(file_name, cmd)
+        
+        # # Play the received media in fullscreen mode using OpenCV
+        # cap = cv2.VideoCapture(file_name)
+
+        # paused = False
+
+        # while cap.isOpened():
+        #     ret, frame = cap.read()
+        #     if not ret:
+        #         break
+        #     if not paused:
+        #         cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
+        #         cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        #         cv2.imshow('Video received', frame)
                 
-        cap.release()
-        cv2.destroyAllWindows()
-        client_socket.close()
+        #     key = cv2.waitKey(25)
+        #     # try: if (key == ord(cmd)) and (cmd == 'q'):
+        #     if key == ord('q'):  # Quit if 'q' is pressed
+        #         break
+        #     elif key == ord('p'):  # Pause if 'p' is pressed
+        #         print("Pausing video.")
+        #         cv2.waitKey(-1)  # Wait until any key is pressed
+        #         paused = True
+        #         print("Video paused.")
+        #     elif key == ord('r'):  # Resume if 'r' is pressed
+        #         paused = False
+        #         print("Resuming video.")
+                
+        # cap.release()
+        # cv2.destroyAllWindows()
+    
+    client_socket.close()
 
     server_socket.close()
 
-# def receive_media(paused):
-    # data = b""
-    # payload_size = struct.calcsize("Q")
+def receive_message(client_socket):
+    message = client_socket.recv(1024).decode('utf-8')
+    print("Received from client:", message)
+    return message
 
-    # while len(data) < payload_size:
-    #     packet = client_socket.recv(262144*1024)  # Receiving data
-    #     if not packet:
-    #         break
-    #     data += packet
+def receive_file(client_socket):
+    data = b""
+    payload_size = struct.calcsize("Q")
 
-    # if len(data) < payload_size:
-    #     continue  # Continue receiving until enough data is received
+    while len(data) < payload_size:
+        packet = client_socket.recv(4*1024)  # Receiving data
+        if not packet:
+            break
+        data += packet
+
+    packed_msg_size = data[:payload_size]
+    data = data[payload_size:]
+    msg_size = struct.unpack("Q", packed_msg_size)[0]
         
-    # packed_msg_size = data[:payload_size]
-    # data = data[payload_size:]
-    # msg_size = struct.unpack("Q", packed_msg_size)[0]
-        
-    # while len(data) < msg_size:
-    #     packet = client_socket.recv(262144*1024)
-    #     if not packet:
-    #         break
-    #     data += packet
-        
-    # if len(data) < msg_size:
-    #     continue  # Continue receiving until complete message is received
-        
-    # frame_data = data[:msg_size]
+    while len(data) < msg_size:
+        data += client_socket.recv(4 * 1024)
+
+    frame_data = data[:msg_size]
     # data = data[msg_size:]
-        
-    # # Deserialize frame
-    # frame = pickle.loads(frame_data)
 
-    # # Full screen
-    # cv2.namedWindow(WIN_NAME, cv2.WND_PROP_FULLSCREEN)
-    # cv2.setWindowProperty(WIN_NAME, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-    # # New window
-    # cv2.imshow(WIN_NAME, frame)
-    
+    # Deserialize frame
+    # frame = pickle.loads(frame_data)  
 
+    return frame_data
+
+def save_file(file_data, file_name):
+    with open(file_name, 'wb') as file:
+        file.write(file_data)
+    print(f"File received and saved as {file_name}")  
+
+def playback(file_name, cmd):
+    # Play the received media in fullscreen mode using OpenCV
+    cap = cv2.VideoCapture(file_name)
+
+    paused = False
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        if not paused:
+            cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
+            cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            cv2.imshow('Video received', frame)
+                
+        key = cv2.waitKey(25)
+        # try: if (key == ord(cmd)) and (cmd == 'q'):
+        if key == ord('q'):  # Quit if 'q' is pressed
+            break
+        elif key == ord('p'):  # Pause if 'p' is pressed
+            print("Pausing video.")
+            cv2.waitKey(-1)  # Wait until any key is pressed
+            paused = True
+            print("Video paused.")
+        elif key == ord('r'):  # Resume if 'r' is pressed
+            paused = False
+            print("Resuming video.")
+                
+    cap.release()
+    cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     # video_path = 'sample-media/sample-vid-3.mp4'
+    creat_server_socket()
     start_end_device_server()
