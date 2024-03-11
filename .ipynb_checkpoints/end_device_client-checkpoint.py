@@ -121,7 +121,7 @@ def playback(file_name, cmd):
             print("Resuming video.")
                 
     cap.release()
-    cv2.destroyAllWindows()
+    cv2.destroyWindow('Video received')
 
 if __name__ == "__main__":
     # video_path = 'sample-media/sample-vid-3.mp4'
