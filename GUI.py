@@ -337,6 +337,7 @@ class GUI:
                     file_name, file_type = self.get_filename_ext(file_path)
                     filename_ext = f"{file_name}{file_type}"
 
+                    self.client_socket.sendall(filename_ext.encode('utf-8'))
                     self.send_to_server(file_path, filename_ext) 
 
                     # send file_name so the server can operate save_file()
