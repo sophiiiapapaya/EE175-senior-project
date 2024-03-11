@@ -3,6 +3,7 @@ import socket
 import cv2
 import struct
 import pickle
+import numpy as np
     
 def get_hostname_ip():
     try:
@@ -21,11 +22,12 @@ def start_end_device_server():
     server_socket.listen()  # Listen for one incoming connection
     
     print(f"End device server listening on {server_ip}:{server_port}")
-    
+        
     client_socket, addr = server_socket.accept() # Listening from the same client
     print('Connected to client:', addr)
 
     while True:
+        black_screen()
         
         message = receive_message(client_socket) # get filename from client
 
@@ -37,41 +39,11 @@ def start_end_device_server():
         # Save received file.
         file_name = message
         save_file(file_data, file_name) # write file(s) to server machine. need to return data?
-
+        
         message = receive_message(client_socket) # get filename from client
         
         cmd = message
         playback(file_name, cmd)
-        
-        # # Play the received media in fullscreen mode using OpenCV
-        # cap = cv2.VideoCapture(file_name)
-
-        # paused = False
-
-        # while cap.isOpened():
-        #     ret, frame = cap.read()
-        #     if not ret:
-        #         break
-        #     if not paused:
-        #         cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
-        #         cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-        #         cv2.imshow('Video received', frame)
-                
-        #     key = cv2.waitKey(25)
-        #     # try: if (key == ord(cmd)) and (cmd == 'q'):
-        #     if key == ord('q'):  # Quit if 'q' is pressed
-        #         break
-        #     elif key == ord('p'):  # Pause if 'p' is pressed
-        #         print("Pausing video.")
-        #         cv2.waitKey(-1)  # Wait until any key is pressed
-        #         paused = True
-        #         print("Video paused.")
-        #     elif key == ord('r'):  # Resume if 'r' is pressed
-        #         paused = False
-        #         print("Resuming video.")
-                
-        # cap.release()
-        # cv2.destroyAllWindows()
     
     client_socket.close()
 
@@ -111,6 +83,14 @@ def save_file(file_data, file_name):
     with open(file_name, 'wb') as file:
         file.write(file_data)
     print(f"File received and saved as {file_name}")  
+
+def black_screen():
+    frame = np.zeros((480, 640, 3), np.uint8)  # Black screen frame
+    cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
+    cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    cv2.imshow('Black screen', frame)
+    print("Black screen on")
+
 
 def playback(file_name, cmd):
     # Play the received media in fullscreen mode using OpenCV
