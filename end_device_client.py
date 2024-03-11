@@ -27,14 +27,10 @@ def start_end_device_server():
 
     while True:
         
-        # message = receive_message(client_socket) # get filename from client
-        # print(message)
+        message = receive_message(client_socket) # get filename from client
 
         # if not message is type file data:
-        file_data = receive_file(client_socket)
-
-        message = receive_message(client_socket) # get filename from client
-        print(message)
+        file_data = receive_file(client_socket)        
 
         # elif message is type file_name:
 
@@ -42,6 +38,8 @@ def start_end_device_server():
         file_name = message
         save_file(file_data, file_name) # write file(s) to server machine. need to return data?
 
+        message = receive_message(client_socket) # get filename from client
+        
         cmd = message
         playback(file_name, cmd)
         
@@ -81,7 +79,7 @@ def start_end_device_server():
 
 def receive_message(client_socket):
     message = client_socket.recv(1024).decode('utf-8')
-    print("Received from client:", message)
+    print("Message received from client:", message)
     return message
 
 def receive_file(client_socket):
