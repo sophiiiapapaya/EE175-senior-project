@@ -501,25 +501,16 @@ class GUI:
                     if not ret:
                         print("Video finished.")
                         break
-                        
-                    # codedFrame = pickle.dumps(frame)
-                    # msg = struct.pack("Q", len(codedFrame)) + codedFrame
-                    # try:
-                    #     client_socket.sendall(msg)
-                    # except Exception:
-                    #     print("Connection lost, exiting stream")
-                    #     cap.release()
-                    #     client_socket.close()
         
                     cv2.imshow('Video sending', frame)
-                if cv2.waitKey(25) & 0xFF == ord('q'):
+                key = cv2.waitKey(25) & 0xFF
+                if key == ord('q'):
                     message = "Quit"
                     print(message)
                     self.client_socket.sendall(message.encode('utf-8'))
                     break
-                elif cv2.waitKey(25) & 0xFF == ord('p'):
+                elif key == ord('p'):
                     if paused:
-                        
                         paused = False
                         message = "Play"
                     else:
