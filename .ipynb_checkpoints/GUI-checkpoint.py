@@ -90,7 +90,9 @@ class GUI:
 
         #------------------build connection-----------------------
 
-        self.hostname, self.ip_address = end_device_client.get_hostname_ip() # uncomment when testing on the same machine
+        # self.hostname, self.ip_address = end_device_client.get_hostname_ip() # uncomment when testing on the same machine
+        self.ip_address = self.client_socket.recv(1024).decode('utf-8')
+        print(self.ip_address)
         # self.client_socket.connect(('10.13.214.63', 12345))
         self.client_socket.connect((self.ip_address, 12345))
     

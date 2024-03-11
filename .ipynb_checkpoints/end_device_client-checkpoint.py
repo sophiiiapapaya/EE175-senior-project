@@ -5,18 +5,12 @@ import struct
 import pickle
 import numpy as np
 import os
-
-def get_ip_address():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8",80))
-    ip_address = s.getsockname()[0]
-    s.close()
-    return ip_address
     
-def get_hostname_ip():
+def get_hostname_ip(server_socket):
     try:
         hostname = socket.gethostname()
-        ip_address = socket.gethostbyname(hostname)
+        # ip_address = socket.gethostbyname(hostname)
+        ip_address = os.system('hostname -I')
         return hostname, ip_address
     except socket.gaierror:
         return "Unable to resolve hostname and IP address."
@@ -24,8 +18,9 @@ def get_hostname_ip():
 def start_end_device_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # server_ip = '10.13.229.231'
-    print(os.system('hostname -I'))
-    server_ip = '0.0.0.0'  # All available interfaces on the same machine, for testing
+    # server_ip = '0.0.0.0'  # All available interfaces on the same machine, for testing
+    server_ip = os.system('hostname -I')
+    print(server_ip)
     server_port = 12345  # Choose a different port for the server
     server_socket.bind((server_ip, server_port))
     server_socket.listen()  # Listen for one incoming connection
@@ -36,6 +31,8 @@ def start_end_device_server():
         
     client_socket, addr = server_socket.accept() # Listening from the same client
     print('Connected to client:', addr)
+
+    client_socket.sendall(server_ip.encode('utf-8'))
 
     while True:
         black_screen()
