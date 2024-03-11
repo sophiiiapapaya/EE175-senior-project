@@ -4,6 +4,14 @@ import cv2
 import struct
 import pickle
 import numpy as np
+import os
+
+def get_ip_address():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8",80))
+    ip_address = s.getsockname()[0]
+    s.close()
+    return ip_address
     
 def get_hostname_ip():
     try:
@@ -16,6 +24,7 @@ def get_hostname_ip():
 def start_end_device_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # server_ip = '10.13.229.231'
+    print(os.system('hostname -I'))
     server_ip = '0.0.0.0'  # All available interfaces on the same machine, for testing
     server_port = 12345  # Choose a different port for the server
     server_socket.bind((server_ip, server_port))
