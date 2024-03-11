@@ -3,7 +3,8 @@ import socket
 import cv2
 import struct
 import pickle
-    
+import numpy as np
+
 def get_hostname_ip():
     try:
         hostname = socket.gethostname()
@@ -119,31 +120,44 @@ def playback(file_name, cmd):
     cap = cv2.VideoCapture(file_name)
 
     paused = False
+    black_screen = False
 
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-        if not paused:
-            cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
-            cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    while True:
+        if black_screen:
+            frame = np.zeros((480, 640, 3), np.uint8)  # Black screen frame
             cv2.imshow('Video received', frame)
+            cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        else:
+            ret, frame = cap.read()
+            if not ret:
+                # If the video ends, set black screen flag to True
+                black_screen = True
+                continue  # Skip displaying the last frame
+            else:
+                # Display the frame if the video is playing
+                cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
+                cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+                cv2.imshow('Video received', frame)
                 
         key = cv2.waitKey(25)
-        # try: if (key == ord(cmd)) and (cmd == 'q'):
-        if key == ord('q'):  # Quit if 'q' is pressed
+        if key == ord('q'):  #Quit if 'q' is pressed
             break
-        elif key == ord('p'):  # Pause if 'p' is pressed
+        elif key == ord('p'):  #Pause if 'p' is pressed
             print("Pausing video.")
-            cv2.waitKey(-1)  # Wait until any key is pressed
+            cv2.waitKey(-1)  #Wait until any key is pressed
             paused = True
             print("Video paused.")
-        elif key == ord('r'):  # Resume if 'r' is pressed
+        elif key == ord('r'):  #Resume if 'r' is pressed
             paused = False
             print("Resuming video.")
+        elif key == ord('n'):  #Enter black screen state if 'n' is pressed
+            black_screen = True
+            print("Entered black screen state. Waiting for another file to be uploaded.")
                 
     cap.release()
-    cv2.destroyAllWindows()
+    cv2.destroyAllWindows()  # Ensure the window is closed when 'q' is pressed
+  # Ensure the window is closed when 'q' is pressed
+
 
 if __name__ == "__main__":
     # video_path = 'sample-media/sample-vid-3.mp4'

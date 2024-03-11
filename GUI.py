@@ -198,7 +198,7 @@ class GUI:
         self.frame5 = tk.Frame(self.frame2)
         self.frame5.pack(pady=20, side=tk.TOP, fill=tk.BOTH)
         self.title_font = tk.font.Font(size=20)
-        self.manage_title = tk.Label(self.frame5, text="UPLOAD YOU FILES", font=self.title_font)
+        self.manage_title = tk.Label(self.frame5, text="UPLOAD YOUR FILES", font=self.title_font)
         self.manage_title.pack(side=tk.LEFT, anchor="nw")
         self.device_status = tk.Label(self.frame5, fg="darkviolet", justify=tk.LEFT)
         self.device_status.pack(anchor="ne")
