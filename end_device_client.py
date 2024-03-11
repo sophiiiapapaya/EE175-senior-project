@@ -20,6 +20,8 @@ def start_end_device_server():
     server_port = 12345  # Choose a different port for the server
     server_socket.bind((server_ip, server_port))
     server_socket.listen()  # Listen for one incoming connection
+
+    cmd = ["Quit", "Play", "Pause"]
     
     print(f"End device server listening on {server_ip}:{server_port}")
         
