@@ -349,7 +349,10 @@ class GUI:
                     file_name, file_type = self.get_filename_ext(file_path)
                     filename_ext = f"{file_name}{file_type}"
 
-                    self.client_socket.sendall(f"Sending {filename_ext}".encode('utf-8'))
+                    message = f"Sending {filename_ext}"
+                    self.client_socket.sendall(message.encode('utf-8'))
+                    msg = message.split()
+                    print(msg[0])
                     self.send_to_server(file_path, filename_ext) 
 
                     # send file_name so the server can operate save_file()
@@ -501,7 +504,11 @@ class GUI:
     def media_control(self):
         try:
             # send filename. server looks for the file and cv2.VideoCapture
-            self.client_socket.sendall(f"Playing {self.filename_ext}".encode('utf-8'))
+            message = f"Playing {self.filename_ext}"
+            self.client_socket.sendall(message.encode('utf-8'))
+            msg = message.split()
+            print(msg[0])
+            print(msg[1])
             
             cap = cv2.VideoCapture(self.sending_path)
             paused = False

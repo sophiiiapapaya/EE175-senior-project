@@ -38,22 +38,28 @@ def start_end_device_server():
         
         message = receive_message(client_socket) # get filename from client
 
-        # if not message is type file data:
-        file_data = receive_file(client_socket)        
-
-        # elif message is type file_name:
-
-        # Save received file.
-        file_name = message
-        save_file(file_data, file_name) # write file(s) to server machine. need to return data?
+        msg = message.split() # array
+        print(msg[0])
+        if msg[0] == "Sending":
+            # if not message is type file data:
+            file_data = receive_file(client_socket)        
+    
+            # elif message is type file_name:
+    
+            # Save received file.
+            file_name = msg[1]
+            save_file(file_data, file_name) # write file(s) to server machine. need to return data?
         
-        message = receive_message(client_socket) # get filename from client
+        # message = receive_message(client_socket) # get filename from client
+
+        elif msg[0] == "Playing":
+            file_name = msg[1]
+            playback(file_name, cmd)
 
         cmd = message
         if cmd == "Quit":
             print(cmd)
             break
-        playback(file_name, cmd)
 
     cv2.destroyAllWindows()
     client_socket.close()
