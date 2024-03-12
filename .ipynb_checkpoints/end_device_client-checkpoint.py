@@ -29,39 +29,41 @@ def start_end_device_server():
     server_socket.listen()  # Listen for one incoming connection
     
     print(f"End device server listening on {server_ip}:{server_port}")
-        
-    client_socket, addr = server_socket.accept() # Listening from the same client
-    print('Connected to client:', addr)
 
-    black_scrn = threading.Thread(target=black_screen, args=())
-    black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
-    black_scrn.start()
+    while True: # while listening for connection
     
-    cap_flag = False # shows cv2.VideoCapture()
-    
-    while True:
-        message = receive_message(client_socket) # get filename from client
+        client_socket, addr = server_socket.accept() # Listening from the same client
+        print('Connected to client:', addr)
 
-        msg = message.split() # array
-        # print(msg[0])
-        if msg[0] == "Sending":
-            # Save received file.
-            file_name = msg[1]
-            file_data = receive_file(client_socket)        
-            save_file(file_data, file_name) # write file(s) to server machine
-            # save_file(file_name, client_socket) # write file(s) to server machine
-            recv_msg = f"{file_name} saved"
-            client_socket.sendall(recv_msg.encode('utf-8'))
+        black_scrn = threading.Thread(target=black_screen, args=())
+        black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
+        black_scrn.start()
         
-        if msg[0] == "Playing" or msg[0] == "Quit" or msg[0] == "Play" or msg[0] == "Pause":
-            if msg[0] == "Playing":
+        cap_flag = False # shows cv2.VideoCapture()
+        
+        while client_socket: # while a client socket is accepted
+            message = receive_message(client_socket) # get filename from client
+    
+            msg = message.split() # array
+            # print(msg[0])
+            if msg[0] == "Sending":
+                # Save received file.
                 file_name = msg[1]
-
-            cmd = msg[0]
-            playback(file_name, cmd)
-
-    cv2.destroyAllWindows()
-    client_socket.close()
+                file_data = receive_file(client_socket)        
+                save_file(file_data, file_name) # write file(s) to server machine
+                # save_file(file_name, client_socket) # write file(s) to server machine
+                recv_msg = f"{file_name} saved"
+                client_socket.sendall(recv_msg.encode('utf-8'))
+            
+            if msg[0] == "Playing" or msg[0] == "Quit" or msg[0] == "Play" or msg[0] == "Pause":
+                if msg[0] == "Playing":
+                    file_name = msg[1]
+    
+                cmd = msg[0]
+                playback(file_name, cmd)
+    
+        cv2.destroyAllWindows()
+        client_socket.close()
 
     server_socket.close()
 
