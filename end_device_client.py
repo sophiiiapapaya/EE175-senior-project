@@ -104,7 +104,7 @@ def black_screen():
 def playback(file_name, cmd):
     # Play the received media in fullscreen mode using OpenCV
 
-    if cap.isOpened():
+    if cap:
         cap.release()
 
     cap = cv2.VideoCapture(file_name)

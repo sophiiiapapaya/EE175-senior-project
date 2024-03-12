@@ -65,6 +65,7 @@ class GUI:
         self.pb_buttons = []
         self.light_btns = []
         self.load_images()
+        self.device_ip = tk.StringVar()
 
         #-------------------styles-------------------------------
         self.label_font = font.Font(slant="italic")
@@ -78,10 +79,11 @@ class GUI:
         }
         
         #-------------------call ui-------------------------------
+        
         self.section1 = tk.Frame(self.root)
         self.section1.pack(side=tk.LEFT, expand=True)
-        self.status = tk.Label(self.section1, text="<Nothing playing>", fg="darkviolet", wraplength=245, justify=tk.LEFT)
-        self.status.pack(padx=20, side=tk.TOP, anchor="n")
+        self.device_status = tk.Label(self.section1, text="Enter device IP and click connect", fg="darkviolet", wraplength=245, justify=tk.LEFT)
+        self.device_status.pack(padx=20, side=tk.TOP, anchor="n")
         
         self.select_device_ui()
         self.playback_ui()
@@ -91,7 +93,6 @@ class GUI:
         #------------------build connection-----------------------
 
         # self.hostname, self.ip_address = end_device_client.get_hostname_ip() # uncomment when testing on the same machine
-        self.device_ip = tk.StringVar()
         # self.ip_address = input("Enter server ip_address: ")
         # self.client_socket.connect(('10.13.214.63', 12345))
         # self.client_socket.connect((self.ip_address, 12345))
@@ -187,10 +188,10 @@ class GUI:
         # self.device_list.bind('<<ListboxSelect>>',self.connect_device)
         # self.device_list.insert(tk.END, self.end_device_hostname)
 
-        self.device_list_scroll = ttk.Scrollbar(self.device_list_frm, style="Vertical.TScrollbar") # Define scrollbar
-        self.device_list_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
-        self.device_list.config(yscrollcommand=self.device_list_scroll.set)  # Link scrollbar with listbox
-        self.device_list_scroll.config(command=self.device_list.yview) # Scrollability
+        # self.device_list_scroll = ttk.Scrollbar(self.device_list_frm, style="Vertical.TScrollbar") # Define scrollbar
+        # self.device_list_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
+        # self.device_list.config(yscrollcommand=self.device_list_scroll.set)  # Link scrollbar with listbox
+        # self.device_list_scroll.config(command=self.device_list.yview) # Scrollability
 
         self.conn_device_btn = customtkinter.CTkButton(self.frame3, 
                                                         text="Connect", 
@@ -214,8 +215,8 @@ class GUI:
         self.title_font = tk.font.Font(size=20)
         self.manage_title = tk.Label(self.frame5, text="UPLOAD YOU FILES", font=self.title_font)
         self.manage_title.pack(side=tk.LEFT, anchor="nw")
-        self.device_status = tk.Label(self.frame5, text="Enter device IP", fg="darkviolet", justify=tk.LEFT)
-        self.device_status.pack(anchor="ne")
+        self.status = tk.Label(self.frame5, text="<Nothing playing>", fg="darkviolet", justify=tk.LEFT)
+        self.status.pack(anchor="ne")
         
         self.instructions = tk.Label(self.frame2, text="Click the button below to upload files")
         self.instructions.pack(padx=20, side=tk.TOP, anchor="nw")
@@ -449,7 +450,7 @@ class GUI:
 
     # self.pb_buttons[1]
     def restart_cmd(self):
-        status_txt = f"Playing \"{self.shortened_path}\" from the beginning"
+        status_txt = f"Playing \"{self.filename_ext}\" from the beginning"
         self.status.configure(text=status_txt)
         # restart the selected video
         self.media_control() # Send the new/selected path to server
