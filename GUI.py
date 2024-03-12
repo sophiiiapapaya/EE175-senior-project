@@ -380,10 +380,10 @@ class GUI:
         try:
             with open(file_path, 'rb') as file:
                 file_data = file.read()
-                # file_size = len(file_data)
-                # message = struct.pack("Q", file_size) + file_data
-                # self.client_socket.sendall(message)
-                self.client_socket.sendall(file_data)
+                file_size = len(file_data)
+                message = struct.pack("Q", file_size) + file_data
+                self.client_socket.sendall(message)
+                # self.client_socket.sendall(file_data)
 
             print(f"File {filename_ext} sent successfully to the server.")
             self.status.configure(text=f"File(s) {filename_ext} sent to server.",fg="darkviolet")
