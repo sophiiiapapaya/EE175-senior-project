@@ -93,6 +93,7 @@ def receive_file(client_socket):
     return frame_data
 
 def save_file(file_name, client_socket):
+    n = 0
     file_data = client_socket.recv(1024)
     with open(file_name, 'wb') as file:
         # file.write(file_data)
