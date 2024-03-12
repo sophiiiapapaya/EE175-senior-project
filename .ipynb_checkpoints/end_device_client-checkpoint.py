@@ -133,6 +133,7 @@ def playback(file_name, cmd):
 
         cv2.waitKey(25)
         if cmd == "Quit":  # Quit if 'q' is pressed
+            print("Quitting video")
             break
         elif cmd == "Pause":  # Pause if 'p' is pressed
             print("Pausing video.")
