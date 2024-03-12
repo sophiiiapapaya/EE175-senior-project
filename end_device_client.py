@@ -25,8 +25,6 @@ def start_end_device_server():
     server_port = 12345  # Choose a different port for the server
     server_socket.bind((server_ip, server_port))
     server_socket.listen()  # Listen for one incoming connection
-
-    cmd = ["Quit", "Play", "Pause"]
     
     print(f"End device server listening on {server_ip}:{server_port}")
         
@@ -42,10 +40,8 @@ def start_end_device_server():
         if msg[0] == "Sending":
             # Save received file.
             file_name = msg[1]
-            
             file_data = receive_file(client_socket)        
-
-            save_file(file_data, file_name) # write file(s) to server machine. need to return data?
+            save_file(file_data, file_name) # write file(s) to server machine
             recv_msg = f"{file_name} saved"
             client_socket.sendall(recv_msg.encode('utf-8'))
         
@@ -107,6 +103,10 @@ def black_screen():
 
 def playback(file_name, cmd):
     # Play the received media in fullscreen mode using OpenCV
+
+    if cap.isOpened():
+        cap.release()
+
     cap = cv2.VideoCapture(file_name)
 
     paused = False

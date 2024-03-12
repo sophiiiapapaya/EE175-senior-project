@@ -352,7 +352,7 @@ class GUI:
                     message = f"Sending {filename_ext}"
                     self.client_socket.sendall(message.encode('utf-8'))
                     self.send_to_server(file_path, filename_ext) 
-                    saved = client_socket.recv(1024).decode('utf-8')
+                    saved = self.client_socket.recv(1024).decode('utf-8')
                     if saved:
                         # Insert file to listbox_cloud
                         self.listbox_cloud.insert(tk.END, file_path)
@@ -468,7 +468,7 @@ class GUI:
 
     # self.pb_buttons[1]
     def restart_cmd(self):
-        status_txt = f"Playing \"self.shortened_path\" from the beginning"
+        status_txt = f"Playing \"{self.shortened_path}\" from the beginning"
         self.status.configure(text=status_txt)
         # restart the selected video
         self.media_control() # Send the new/selected path to server
