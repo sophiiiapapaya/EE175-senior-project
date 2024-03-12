@@ -54,8 +54,8 @@ def start_end_device_server():
             if msg[0] == "Playing":
                 file_name = msg[1]
 
-            cmd = msg[0]
-            playback(file_name, cmd)
+            # cmd = msg[0]
+            playback(file_name)
 
     cv2.destroyAllWindows()
     client_socket.close()
@@ -92,7 +92,7 @@ def receive_file(client_socket):
 
     return frame_data
 
-def save_file(file_name, client_socket):
+def save_file(file_data, file_name):
     # n = 0
     # file_data = client_socket.recv(1024)
     with open(file_name, 'wb') as file:
@@ -112,7 +112,7 @@ def black_screen():
     print("Black screen on")
 
 
-def playback(file_name, cmd):
+def playback(file_name):
     global cap_flag
     # Play the received media in fullscreen mode using OpenCV
     if cap_flag:
@@ -124,6 +124,7 @@ def playback(file_name, cmd):
     paused = False
 
     while cap.isOpened():
+        cmd = receive_message(client_socket)
         cap_flag = True 
         ret, frame = cap.read()
         if not ret:
