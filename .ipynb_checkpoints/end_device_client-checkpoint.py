@@ -34,8 +34,9 @@ def start_end_device_server():
     
         client_socket, addr = server_socket.accept() # Listening from the same client
         print('Connected to client:', addr)
-
-        black_scrn = threading.Thread(target=black_screen, args=(client_socket))
+        
+        socket_flag = True
+        black_scrn = threading.Thread(target=black_screen, args=(socket_flag))
         black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
         black_scrn.start()
         
@@ -63,6 +64,7 @@ def start_end_device_server():
                 playback(file_name, cmd)
     
         client_socket.close()
+        socket_flag = False
         cv2.destroyAllWindows()
 
     server_socket.close()
@@ -109,8 +111,8 @@ def save_file(file_data, file_name):
     print(f"File received and saved as {file_name}")  
     
 
-def black_screen(client_socket):
-    while client_socket:
+def black_screen(socket_flag):
+    while socket_flag:
         bg = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
         cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
         cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
