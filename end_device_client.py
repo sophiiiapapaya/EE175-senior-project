@@ -5,6 +5,7 @@ import struct
 import pickle
 import numpy as np
 import os, subprocess
+import threading
     
 def get_hostname_ip(server_socket):
     try:
@@ -32,7 +33,10 @@ def start_end_device_server():
     client_socket, addr = server_socket.accept() # Listening from the same client
     print('Connected to client:', addr)
 
-    black_screen()
+    black_scrn = threading.Thread(target=black_screen, args=())
+    playback_scrn = threading.Thread(target=playback, args=())
+
+    black_scrn.start()
     
     cap_flag = False # shows cv2.VideoCapture()
     
@@ -118,14 +122,13 @@ def black_screen():
 
 def playback(file_name, cmd):
     global cap_flag
+    paused = False
     # Play the received media in fullscreen mode using OpenCV
     if cap_flag:
         cap.release()
 
     cap = cv2.VideoCapture(file_name)
     file_name, file_type = os.path.splitext(file_name)
-        
-    paused = False
 
     while cap.isOpened():
         cap_flag = True 
