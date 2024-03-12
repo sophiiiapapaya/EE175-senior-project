@@ -40,14 +40,15 @@ def start_end_device_server():
         msg = message.split() # array
         # print(msg[0])
         if msg[0] == "Sending":
-            file_data = receive_file(client_socket)        
-    
             # Save received file.
             file_name = msg[1]
-            save_file(file_data, file_name) # write file(s) to server machine. need to return data?
-        
-        # message = receive_message(client_socket) # get filename from client
+            
+            file_data = receive_file(client_socket)        
 
+            save_file(file_data, file_name) # write file(s) to server machine. need to return data?
+            recv_msg = f"{file_name} saved"
+            client_socket.sendall(recv_msg.encode('utf-8'))
+        
         if msg[0] == "Playing" or msg[0] == "Quit" or msg[0] == "Play" or msg[0] == "Pause":
             if msg[0] == "Playing":
                 file_name = msg[1]
@@ -94,6 +95,7 @@ def save_file(file_data, file_name):
     with open(file_name, 'wb') as file:
         file.write(file_data)
     print(f"File received and saved as {file_name}")  
+    
 
 def black_screen():
     frame = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame

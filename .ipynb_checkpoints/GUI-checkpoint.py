@@ -351,18 +351,16 @@ class GUI:
 
                     message = f"Sending {filename_ext}"
                     self.client_socket.sendall(message.encode('utf-8'))
-                    msg = message.split()
-                    print(msg[0])
                     self.send_to_server(file_path, filename_ext) 
-
-                    # send file_name so the server can operate save_file()
-                    # self.client_socket.sendall(filename_ext) 
+                    saved = client_socket.recv(1024).decode('utf-8')
+                    if saved:
+                        # Insert file to listbox_cloud
+                        self.listbox_cloud.insert(tk.END, file_path)
                     
-                    # Insert file to listbox_cloud
-                    self.listbox_cloud.insert(tk.END, file_path)
-                    
-                    # update playback list
-                    self.pb_list.insert(tk.END, filename_ext)
+                        # update playback list
+                        self.pb_list.insert(tk.END, filename_ext)
+                    else:
+                        messagebox.showwarning("Warning", "File saving not complete!")
                 else:
                     messagebox.showwarning("Warning", "File did not send!")
 
