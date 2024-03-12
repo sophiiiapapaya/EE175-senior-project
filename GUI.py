@@ -91,9 +91,10 @@ class GUI:
         #------------------build connection-----------------------
 
         # self.hostname, self.ip_address = end_device_client.get_hostname_ip() # uncomment when testing on the same machine
-        self.ip_address = input("Enter server ip_address: ")
+        self.device_ip = tk.StringVar()
+        # self.ip_address = input("Enter server ip_address: ")
         # self.client_socket.connect(('10.13.214.63', 12345))
-        self.client_socket.connect((self.ip_address, 12345))
+        # self.client_socket.connect((self.ip_address, 12345))
 
         self.key = cv2.waitKey(25) & 0xFF
 
@@ -168,21 +169,22 @@ class GUI:
         self.frame3 = tk.Frame(self.section1)
         self.frame3.pack(pady=20, padx=20, side=tk.TOP, expand=True)
 
-        self.select_device_title = tk.Label(self.frame3, text="Choose your device and click connect.")
+        self.select_device_title = tk.Label(self.frame3, text="Enter the IP address and click connect.")
         self.select_device_title.pack(padx=20, side=tk.TOP, anchor='nw')
 
         self.device_list_frm = tk.Frame(self.frame3)
         self.device_list_frm.pack(padx=20, side=tk.TOP, fill=tk.BOTH, expand=True)
 
         # Listbox properties
-        self.device_list = tk.Listbox(self.device_list_frm, 
+        self.device_list = tk.Entry(self.device_list_frm, 
+                                  textvariable = self.device_ip,
                                   borderwidth=0, 
                                   highlightthickness=0, # remove listbox border
                                   relief=tk.FLAT, # Default: SUNKEN
                                   selectbackground="darkviolet",
                                   cursor="hand2") 
         self.device_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.device_list.bind('<<ListboxSelect>>',self.connect_device)
+        # self.device_list.bind('<<ListboxSelect>>',self.connect_device)
         # self.device_list.insert(tk.END, self.end_device_hostname)
 
         self.device_list_scroll = ttk.Scrollbar(self.device_list_frm, style="Vertical.TScrollbar") # Define scrollbar
@@ -212,7 +214,7 @@ class GUI:
         self.title_font = tk.font.Font(size=20)
         self.manage_title = tk.Label(self.frame5, text="UPLOAD YOU FILES", font=self.title_font)
         self.manage_title.pack(side=tk.LEFT, anchor="nw")
-        self.device_status = tk.Label(self.frame5, fg="darkviolet", justify=tk.LEFT)
+        self.device_status = tk.Label(self.frame5, text="Enter device IP", fg="darkviolet", justify=tk.LEFT)
         self.device_status.pack(anchor="ne")
         
         self.instructions = tk.Label(self.frame2, text="Click the button below to upload files")
@@ -444,27 +446,6 @@ class GUI:
             self.filename_ext = f"{file_name}{file_type}"
             status_txt = f"Selected \"{self.filename_ext}\". Click the button to play from where you left off or play from the beginning."
             self.status.configure(text=status_txt)
-            
-                
-    # # self.pb_buttons[0] action
-    # def pause_resume_cmd(self):
-    #     # pause video
-    #     # send 'p' to key var (wait until any key is pressed)
-    #     if self.playing: 
-    #         self.pb_buttons[0].configure(image=self.img_list[0])
-    #         self.status.configure(text=(f"Paused \"{self.shortened_path}\""))
-    #         # send pause command to server
-    #         gui_client.playback_ctrl()
-    #         self.playing = False
-        
-    #     # resume video
-    #     # send 'p' to key var
-    #     else: # self.playing == False (paused == True)
-    #         self.pb_buttons[0].configure(image=self.pause_img)
-    #         self.status.configure(text=(f"Resumed \"{self.shortened_path}\""))
-    #         # send resume command to server 
-    #         gui_client.playback_ctrl() # "any key" 
-    #         self.playing = True
 
     # self.pb_buttons[1]
     def restart_cmd(self):
@@ -485,18 +466,18 @@ class GUI:
         print(message)
         self.client_socket.sendall(message.encode('utf-8'))
             
-    def connect_device(self, event=None):
-        selection = self.device_list.curselection()
-        if selection:
-            index = selection[0]
-            device = self.device_list.get(index)            
-            status_txt = f"Device selected: \"{self.hostname} ({self.ip_address})\". \nClick button to connect."
-            self.device_status.configure(text=status_txt)
-            # gui_client.message_to_end_device("GUI Client received message")
+    # def connect_device(self, event=None):
+    #     selection = self.device_list.curselection()
+    #     if selection:
+    #         index = selection[0]
+    #         device = self.device_list.get(index)            
+    #         status_txt = f"Device selected: \"{self.hostname} ({self.ip_address})\". \nClick button to connect."
+    #         self.device_status.configure(text=status_txt)
 
     def connect_cmd(self):
-        self.client_socket.connect((self.ip_address, 12345))
-        status_txt = f"Connected to \"{self.hostname} ({self.ip_address})\". \nClick button to connect."
+        ip_address = self.device_ip.get()
+        self.client_socket.connect((ip_address, 12345))
+        status_txt = f"Connected to \"{ip_address}\". "
         self.device_status.configure(text=status_txt)
             
     def media_control(self):
