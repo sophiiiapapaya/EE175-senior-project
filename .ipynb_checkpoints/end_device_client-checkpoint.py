@@ -35,7 +35,7 @@ def start_end_device_server():
         client_socket, addr = server_socket.accept() # Listening from the same client
         print('Connected to client:', addr)
 
-        black_scrn = threading.Thread(target=black_screen, args=())
+        black_scrn = threading.Thread(target=black_screen, args=(client_socket))
         black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
         black_scrn.start()
         
@@ -62,8 +62,8 @@ def start_end_device_server():
                 cmd = msg[0]
                 playback(file_name, cmd)
     
-        cv2.destroyAllWindows()
         client_socket.close()
+        cv2.destroyAllWindows()
 
     server_socket.close()
 
@@ -109,16 +109,18 @@ def save_file(file_data, file_name):
     print(f"File received and saved as {file_name}")  
     
 
-def black_screen():
-    # bg = cv2.imread('assets/black.jpg')
-    bg = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
-    cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
-    cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-    cv2.imshow('Black screen', bg)
-    # waits for user to press any key 
-    # (this is necessary to avoid Python kernel form crashing) 
-    cv2.waitKey(0) 
-    print("Black screen on")
+def black_screen(client_socket):
+    while client_socket:
+        bg = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
+        cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        cv2.imshow('Black screen', bg)
+        # waits for user to press any key 
+        # (this is necessary to avoid Python kernel form crashing) 
+        cv2.waitKey(0) 
+        print("Black screen on")
+        
+    cv2.destroyWindow('Black screen')
 
 
 def playback(file_name, cmd):
