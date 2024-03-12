@@ -17,7 +17,7 @@ def get_hostname_ip(server_socket):
         return "Unable to resolve hostname and IP address."
         
 def start_end_device_server():
-    global cap_flag 
+    global cap_flag, socket_flag
     server_ip = subprocess.run(['hostname', '-I'], capture_output=True, text=True).stdout.strip()
     print(server_ip)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -36,7 +36,7 @@ def start_end_device_server():
         print('Connected to client:', addr)
         
         socket_flag = True
-        black_scrn = threading.Thread(target=black_screen, args=(socket_flag))
+        black_scrn = threading.Thread(target=black_screen, args=())
         black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
         black_scrn.start()
         
@@ -111,7 +111,8 @@ def save_file(file_data, file_name):
     print(f"File received and saved as {file_name}")  
     
 
-def black_screen(socket_flag):
+def black_screen():
+    global socket_flag
     while socket_flag:
         bg = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
         cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
