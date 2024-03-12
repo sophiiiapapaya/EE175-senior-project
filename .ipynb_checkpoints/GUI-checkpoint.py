@@ -65,6 +65,7 @@ class GUI:
         self.pb_buttons = []
         self.light_btns = []
         self.load_images()
+        self.device_ip = tk.StringVar()
 
         #-------------------styles-------------------------------
         self.label_font = font.Font(slant="italic")
@@ -78,21 +79,25 @@ class GUI:
         }
         
         #-------------------call ui-------------------------------
+        
         self.section1 = tk.Frame(self.root)
         self.section1.pack(side=tk.LEFT, expand=True)
-        self.status = tk.Label(self.section1, text="<Nothing playing>", fg="darkviolet", wraplength=245, justify=tk.LEFT)
-        self.status.pack(padx=20, side=tk.TOP, anchor="n")
+        self.device_status = tk.Label(self.section1, text="Enter device IP and click connect", fg="darkviolet", wraplength=245, justify=tk.LEFT)
+        self.device_status.pack(padx=20, side=tk.TOP, anchor="n")
         
         self.select_device_ui()
         self.playback_ui()
         self.manage_file_ui()
         self.control_ui()
+        messagebox.showinfo("Welcome", "Please enter the device IP address before uploading your files.")
 
         #------------------build connection-----------------------
 
-        self.hostname, self.ip_address = end_device_client.get_hostname_ip() # uncomment when testing on the same machine
+        # self.hostname, self.ip_address = end_device_client.get_hostname_ip() # uncomment when testing on the same machine
+        # self.ip_address = input("Enter server ip_address: ")
         # self.client_socket.connect(('10.13.214.63', 12345))
-        self.client_socket.connect((self.ip_address, 12345))
+        # self.client_socket.connect((self.ip_address, 12345))
+
     
     def load_images(self):
         for path in self.img_path_list:
@@ -152,31 +157,40 @@ class GUI:
                                command=self.restart_cmd)
         restart_btn.pack(pady=10, padx=10, side=tk.LEFT)
 
+        self.stop_img = ImageTk.PhotoImage(Image.open('assets/stop-img.png').resize((20, 20), Image.LANCZOS))
+        stop_btn = tk.Button(self.btn_frm,
+                               image=self.stop_img, 
+                               text="Stop",
+                               cursor="hand2", 
+                               command=self.stop_cmd)
+        stop_btn.pack(pady=10, padx=10, side=tk.LEFT)
+
     def select_device_ui(self):
         self.frame3 = tk.Frame(self.section1)
         self.frame3.pack(pady=20, padx=20, side=tk.TOP, expand=True)
 
-        self.select_device_title = tk.Label(self.frame3, text="Choose your device and click connect.")
+        self.select_device_title = tk.Label(self.frame3, text="Enter the IP address and click connect.")
         self.select_device_title.pack(padx=20, side=tk.TOP, anchor='nw')
 
         self.device_list_frm = tk.Frame(self.frame3)
         self.device_list_frm.pack(padx=20, side=tk.TOP, fill=tk.BOTH, expand=True)
 
         # Listbox properties
-        self.device_list = tk.Listbox(self.device_list_frm, 
+        self.device_list = tk.Entry(self.device_list_frm, 
+                                  textvariable = self.device_ip,
                                   borderwidth=0, 
                                   highlightthickness=0, # remove listbox border
                                   relief=tk.FLAT, # Default: SUNKEN
                                   selectbackground="darkviolet",
                                   cursor="hand2") 
         self.device_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.device_list.bind('<<ListboxSelect>>',self.connect_device)
+        # self.device_list.bind('<<ListboxSelect>>',self.connect_device)
         # self.device_list.insert(tk.END, self.end_device_hostname)
 
-        self.device_list_scroll = ttk.Scrollbar(self.device_list_frm, style="Vertical.TScrollbar") # Define scrollbar
-        self.device_list_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
-        self.device_list.config(yscrollcommand=self.device_list_scroll.set)  # Link scrollbar with listbox
-        self.device_list_scroll.config(command=self.device_list.yview) # Scrollability
+        # self.device_list_scroll = ttk.Scrollbar(self.device_list_frm, style="Vertical.TScrollbar") # Define scrollbar
+        # self.device_list_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
+        # self.device_list.config(yscrollcommand=self.device_list_scroll.set)  # Link scrollbar with listbox
+        # self.device_list_scroll.config(command=self.device_list.yview) # Scrollability
 
         self.conn_device_btn = customtkinter.CTkButton(self.frame3, 
                                                         text="Connect", 
@@ -195,16 +209,16 @@ class GUI:
         # self.frame1.grid(row=0, column=0,pady=20, padx=20, sticky='nswe')
         self.frame2.pack(pady=20, padx=20, side=tk.TOP, expand=True, anchor="nw")
 
-        self.frame5 = tk.Frame(self.frame2)
-        self.frame5.pack(pady=20, side=tk.TOP, fill=tk.BOTH)
         self.title_font = tk.font.Font(size=20)
-        self.manage_title = tk.Label(self.frame5, text="UPLOAD YOU FILES", font=self.title_font)
-        self.manage_title.pack(side=tk.LEFT, anchor="nw")
-        self.device_status = tk.Label(self.frame5, fg="darkviolet", justify=tk.LEFT)
-        self.device_status.pack(anchor="ne")
+        self.manage_title = tk.Label(self.frame2, text="UPLOAD YOU FILES", font=self.title_font)
+        self.manage_title.pack(pady=20, side=tk.TOP, anchor="nw")
         
-        self.instructions = tk.Label(self.frame2, text="Click the button below to upload files")
-        self.instructions.pack(padx=20, side=tk.TOP, anchor="nw")
+        self.frame5 = tk.Frame(self.frame2)
+        self.frame5.pack(side=tk.TOP, fill=tk.BOTH)
+        self.instructions = tk.Label(self.frame5, text="Click the button below to upload files")
+        self.instructions.pack(padx=20, side=tk.LEFT, anchor="nw")
+        self.status = tk.Label(self.frame5, text="<Nothing playing>", fg="darkviolet", justify=tk.LEFT)
+        self.status.pack(padx=20,anchor="ne")
 
         # self.entry = tk.Entry(self.frame, width=50)
         # self.entry.pack(side=tk.LEFT)
@@ -239,7 +253,7 @@ class GUI:
         self.added_files_frm.pack(side=tk.LEFT, expand=True)
         self.added_files_label1 = tk.Label(self.added_files_frm, text="Selected files will be added here. ")
         self.added_files_label1.pack()
-        self.listbox_added = tk.Listbox(self.added_files_frm, borderwidth=0, width=50, height=20, selectmode = "multiple")
+        self.listbox_added = tk.Listbox(self.added_files_frm, borderwidth=0, width=50, height=20)
         self.listbox_added.pack(pady=10, side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.list_added_scroll = ttk.Scrollbar(self.added_files_frm, style="Vertical.TScrollbar")
         self.list_added_scroll.pack(pady=10,side=tk.RIGHT, fill=tk.Y) 
@@ -261,7 +275,7 @@ class GUI:
         self.cloud_files_frm.pack(side=tk.LEFT, expand=True)
         self.cloud_files_label = tk.Label(self.cloud_files_frm, text="Media Files Uploaded")
         self.cloud_files_label.pack()
-        self.listbox_cloud = tk.Listbox(self.cloud_files_frm, borderwidth=0, width=50, height=20, selectmode = "multiple")
+        self.listbox_cloud = tk.Listbox(self.cloud_files_frm, borderwidth=0, width=50, height=20)
         self.listbox_cloud.pack(pady=10, side=tk.LEFT, expand=True)
         self.list_cloud_scroll = ttk.Scrollbar(self.cloud_files_frm, style="Vertical.TScrollbar")
         self.list_cloud_scroll.pack(pady=10,side=tk.RIGHT, fill=tk.Y) 
@@ -337,17 +351,19 @@ class GUI:
                     file_name, file_type = self.get_filename_ext(file_path)
                     filename_ext = f"{file_name}{file_type}"
 
-                    self.client_socket.sendall(filename_ext.encode('utf-8'))
+                    message = f"Sending {filename_ext}"
+                    self.client_socket.sendall(message.encode('utf-8'))
                     self.send_to_server(file_path, filename_ext) 
-
-                    # send file_name so the server can operate save_file()
-                    # self.client_socket.sendall(filename_ext) 
+                    saved = self.client_socket.recv(1024).decode('utf-8')
+                    print("Message received from server:", saved)
+                    if saved:
+                        # Insert file to listbox_cloud
+                        self.listbox_cloud.insert(tk.END, file_path)
                     
-                    # Insert file to listbox_cloud
-                    self.listbox_cloud.insert(tk.END, file_path)
-                    
-                    # update playback list
-                    self.pb_list.insert(tk.END, filename_ext)
+                        # update playback list
+                        self.pb_list.insert(tk.END, filename_ext)
+                    else:
+                        messagebox.showwarning("Warning", "File saving not complete!")
                 else:
                     messagebox.showwarning("Warning", "File did not send!")
 
@@ -362,14 +378,12 @@ class GUI:
 
     def send_to_server(self, file_path, filename_ext):
         try:
-            # client_socket.connect(('192.168.1.6', 9999))
-            # client_socket.connect(('10.13.229.231', 9999))
-
             with open(file_path, 'rb') as file:
                 file_data = file.read()
                 file_size = len(file_data)
                 message = struct.pack("Q", file_size) + file_data
                 self.client_socket.sendall(message)
+                # self.client_socket.sendall(file_data)
 
             print(f"File {filename_ext} sent successfully to the server.")
             self.status.configure(text=f"File(s) {filename_ext} sent to server.",fg="darkviolet")
@@ -433,31 +447,10 @@ class GUI:
             self.filename_ext = f"{file_name}{file_type}"
             status_txt = f"Selected \"{self.filename_ext}\". Click the button to play from where you left off or play from the beginning."
             self.status.configure(text=status_txt)
-            
-                
-    # # self.pb_buttons[0] action
-    # def pause_resume_cmd(self):
-    #     # pause video
-    #     # send 'p' to key var (wait until any key is pressed)
-    #     if self.playing: 
-    #         self.pb_buttons[0].configure(image=self.img_list[0])
-    #         self.status.configure(text=(f"Paused \"{self.shortened_path}\""))
-    #         # send pause command to server
-    #         gui_client.playback_ctrl()
-    #         self.playing = False
-        
-    #     # resume video
-    #     # send 'p' to key var
-    #     else: # self.playing == False (paused == True)
-    #         self.pb_buttons[0].configure(image=self.pause_img)
-    #         self.status.configure(text=(f"Resumed \"{self.shortened_path}\""))
-    #         # send resume command to server 
-    #         gui_client.playback_ctrl() # "any key" 
-    #         self.playing = True
 
     # self.pb_buttons[1]
     def restart_cmd(self):
-        status_txt = f"Playing \"self.shortened_path\" from the beginning"
+        status_txt = f"Playing \"{self.filename_ext}\" from the beginning"
         self.status.configure(text=status_txt)
         # restart the selected video
         self.media_control() # Send the new/selected path to server
@@ -470,27 +463,32 @@ class GUI:
         file_path = 0 # will connect the camera
 
     def stop_cmd(self):
-        gui_client.playback_ctrl('q')
-        self.playing = False
+        message = "Quit"
+        print(message)
+        self.client_socket.sendall(message.encode('utf-8'))
             
-    def connect_device(self, event=None):
-        selection = self.device_list.curselection()
-        if selection:
-            index = selection[0]
-            device = self.device_list.get(index)            
-            status_txt = f"Device selected: \"{self.hostname} ({self.ip_address})\". \nClick button to connect."
-            self.device_status.configure(text=status_txt)
-            # gui_client.message_to_end_device("GUI Client received message")
+    # def connect_device(self, event=None):
+    #     selection = self.device_list.curselection()
+    #     if selection:
+    #         index = selection[0]
+    #         device = self.device_list.get(index)            
+    #         status_txt = f"Device selected: \"{self.hostname} ({self.ip_address})\". \nClick button to connect."
+    #         self.device_status.configure(text=status_txt)
 
     def connect_cmd(self):
-        self.client_socket.connect((self.ip_address, 12345))
-        status_txt = f"Connected to \"{self.hostname} ({self.ip_address})\". \nClick button to connect."
+        ip_address = self.device_ip.get()
+        self.client_socket.connect((ip_address, 12345))
+        status_txt = f"Connected to \"{ip_address}\". "
         self.device_status.configure(text=status_txt)
             
     def media_control(self):
         try:
             # send filename. server looks for the file and cv2.VideoCapture
-            self.client_socket.sendall(self.filename_ext.encode('utf-8'))
+            message = f"Playing {self.filename_ext}"
+            self.client_socket.sendall(message.encode('utf-8'))
+            msg = message.split()
+            print(f"msg[0]:{msg[0]}")
+            print(f"msg[1]:{msg[1]}")
             
             cap = cv2.VideoCapture(self.sending_path)
             paused = False
@@ -518,9 +516,6 @@ class GUI:
                         message = "Pause"
                         print(message)
                         cv2.waitKey(-1) # wait until any key is pressed
-                        if key == ord(cmd):  # 'p' Pause or resume the video
-                            paused = False
-                            message = "Play"
                     self.client_socket.sendall(message.encode('utf-8'))
 
             # Release resources
