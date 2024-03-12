@@ -127,6 +127,7 @@ def playback(file_name, cmd):
     # Play the received media in fullscreen mode using OpenCV
     if cap_flag:
         cap.release()
+        print(f"Closing current video, play {file_name}")
 
     cap = cv2.VideoCapture(file_name)
     file_name, file_type = os.path.splitext(file_name)
