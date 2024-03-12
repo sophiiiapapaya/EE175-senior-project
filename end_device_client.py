@@ -54,8 +54,8 @@ def start_end_device_server():
             if msg[0] == "Playing":
                 file_name = msg[1]
 
-            # cmd = msg[0]
-            playback(file_name)
+            cmd = msg[0]
+            playback(file_name, cmd)
 
     cv2.destroyAllWindows()
     client_socket.close()
@@ -105,14 +105,18 @@ def save_file(file_data, file_name):
     
 
 def black_screen():
-    frame = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
+    bg = cv2.imread('assets/black.jpg')
+    # frame = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
     cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-    cv2.imshow('Black screen', frame)
+    cv2.imshow('Black screen', bg)
+    # waits for user to press any key 
+    # (this is necessary to avoid Python kernel form crashing) 
+    cv2.waitKey(0) 
     print("Black screen on")
 
 
-def playback(file_name):
+def playback(file_name, cmd):
     global cap_flag
     # Play the received media in fullscreen mode using OpenCV
     if cap_flag:
@@ -124,7 +128,6 @@ def playback(file_name):
     paused = False
 
     while cap.isOpened():
-        cmd = receive_message(client_socket)
         cap_flag = True 
         ret, frame = cap.read()
         if not ret:
