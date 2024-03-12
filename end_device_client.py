@@ -103,7 +103,7 @@ def save_file(file_name, client_socket):
             file.write(file_data)
             print("file_data {0}".format(i))
             i += 1
-            file_data = connection.recv(1024)
+            file_data = client_socket.recv(1024)
     print(f"File received and saved as {file_name}")  
     
 
