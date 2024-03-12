@@ -298,6 +298,7 @@ class GUI:
         self.light_text = ["Left light", "Center light", "Right light"]
         for txt in self.light_text:
             button = customtkinter.CTkButton(self.ctrl_btn_frm, 
+                                             state="disabled", 
                                              text=txt, 
                                              cursor="hand2",  
                                              text_color="#000000", 
