@@ -89,6 +89,7 @@ class GUI:
         self.playback_ui()
         self.manage_file_ui()
         self.control_ui()
+        messagebox.showinfo("Welcome", "Please enter the device IP address before uploading your files.")
 
         #------------------build connection-----------------------
 
@@ -96,8 +97,6 @@ class GUI:
         # self.ip_address = input("Enter server ip_address: ")
         # self.client_socket.connect(('10.13.214.63', 12345))
         # self.client_socket.connect((self.ip_address, 12345))
-
-        self.key = cv2.waitKey(25) & 0xFF
 
     
     def load_images(self):
@@ -501,13 +500,13 @@ class GUI:
                         break
         
                     cv2.imshow('Video sending', frame)
-                # key = cv2.waitKey(25) & 0xFF
-                if self.key == ord('q'):
+                key = cv2.waitKey(25) & 0xFF
+                if key == ord('q'):
                     message = "Quit"
                     print(message)
                     self.client_socket.sendall(message.encode('utf-8'))
                     break
-                elif self.key == ord('p'):
+                elif key == ord('p'):
                     if paused:
                         paused = False
                         message = "Play"

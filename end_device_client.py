@@ -16,6 +16,7 @@ def get_hostname_ip(server_socket):
         return "Unable to resolve hostname and IP address."
         
 def start_end_device_server():
+    global cap_flag 
     server_ip = subprocess.run(['hostname', '-I'], capture_output=True, text=True).stdout.strip()
     print(server_ip)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -32,6 +33,9 @@ def start_end_device_server():
     print('Connected to client:', addr)
 
     black_screen()
+    
+    cap_flag = False # shows cv2.VideoCapture()
+    
     while True:
         message = receive_message(client_socket) # get filename from client
 
@@ -102,9 +106,9 @@ def black_screen():
 
 
 def playback(file_name, cmd):
+    global cap_flag
     # Play the received media in fullscreen mode using OpenCV
-
-    if cap:
+    if cap_flag:
         cap.release()
 
     cap = cv2.VideoCapture(file_name)
@@ -112,6 +116,7 @@ def playback(file_name, cmd):
     paused = False
 
     while cap.isOpened():
+        cap_flag = True 
         ret, frame = cap.read()
         if not ret:
             break
@@ -119,19 +124,6 @@ def playback(file_name, cmd):
             cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
             cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow('Video received', frame)
-                
-        # key = cv2.waitKey(25)
-        # # try: if (key == ord(cmd)) and (cmd == 'q'):
-        # if key == ord('q'):  # Quit if 'q' is pressed
-        #     break
-        # elif key == ord('p'):  # Pause if 'p' is pressed
-        #     print("Pausing video.")
-        #     cv2.waitKey(-1)  # Wait until any key is pressed
-        #     paused = True
-        #     print("Video paused.")
-        # elif key == ord('r'):  # Resume if 'r' is pressed
-        #     paused = False
-        #     print("Resuming video.")
 
         cv2.waitKey(25)
         if cmd == "Quit":  # Quit if 'q' is pressed
@@ -145,7 +137,8 @@ def playback(file_name, cmd):
         elif cmd == "Play":  # Resume if 'r' is pressed
             paused = False
             print("Resuming video.")
-                
+
+    cap_flag = False 
     cap.release()
     cv2.destroyWindow('Video received')
 
