@@ -209,16 +209,16 @@ class GUI:
         # self.frame1.grid(row=0, column=0,pady=20, padx=20, sticky='nswe')
         self.frame2.pack(pady=20, padx=20, side=tk.TOP, expand=True, anchor="nw")
 
-        self.frame5 = tk.Frame(self.frame2)
-        self.frame5.pack(pady=20, side=tk.TOP, fill=tk.BOTH)
         self.title_font = tk.font.Font(size=20)
-        self.manage_title = tk.Label(self.frame5, text="UPLOAD YOU FILES", font=self.title_font)
-        self.manage_title.pack(side=tk.LEFT, anchor="nw")
-        self.status = tk.Label(self.frame5, text="<Nothing playing>", fg="darkviolet", justify=tk.LEFT)
-        self.status.pack(anchor="ne")
+        self.manage_title = tk.Label(self.frame2, text="UPLOAD YOU FILES", font=self.title_font)
+        self.manage_title.pack(pady=20, side=tk.TOP, anchor="nw")
         
-        self.instructions = tk.Label(self.frame2, text="Click the button below to upload files")
-        self.instructions.pack(padx=20, side=tk.TOP, anchor="nw")
+        self.frame5 = tk.Frame(self.frame2)
+        self.frame5.pack(side=tk.TOP, fill=tk.BOTH)
+        self.instructions = tk.Label(self.frame5, text="Click the button below to upload files")
+        self.instructions.pack(padx=20, side=tk.LEFT, anchor="nw")
+        self.status = tk.Label(self.frame5, text="<Nothing playing>", fg="darkviolet", justify=tk.LEFT)
+        self.status.pack(padx=20,anchor="ne")
 
         # self.entry = tk.Entry(self.frame, width=50)
         # self.entry.pack(side=tk.LEFT)
@@ -355,6 +355,7 @@ class GUI:
                     self.client_socket.sendall(message.encode('utf-8'))
                     self.send_to_server(file_path, filename_ext) 
                     saved = self.client_socket.recv(1024).decode('utf-8')
+                    print("Message received from server:", saved)
                     if saved:
                         # Insert file to listbox_cloud
                         self.listbox_cloud.insert(tk.END, file_path)
@@ -377,12 +378,12 @@ class GUI:
 
     def send_to_server(self, file_path, filename_ext):
         try:
-
             with open(file_path, 'rb') as file:
                 file_data = file.read()
-                file_size = len(file_data)
-                message = struct.pack("Q", file_size) + file_data
-                self.client_socket.sendall(message)
+                # file_size = len(file_data)
+                # message = struct.pack("Q", file_size) + file_data
+                # self.client_socket.sendall(message)
+                self.client_socket.sendall(file_data)
 
             print(f"File {filename_ext} sent successfully to the server.")
             self.status.configure(text=f"File(s) {filename_ext} sent to server.",fg="darkviolet")

@@ -44,8 +44,9 @@ def start_end_device_server():
         if msg[0] == "Sending":
             # Save received file.
             file_name = msg[1]
-            file_data = receive_file(client_socket)        
-            save_file(file_data, file_name) # write file(s) to server machine
+            # file_data = receive_file(client_socket)        
+            # save_file(file_data, file_name) # write file(s) to server machine
+            save_file(file_name, client_socket) # write file(s) to server machine
             recv_msg = f"{file_name} saved"
             client_socket.sendall(recv_msg.encode('utf-8'))
         
@@ -91,9 +92,17 @@ def receive_file(client_socket):
 
     return frame_data
 
-def save_file(file_data, file_name):
+def save_file(file_name, client_socket):
+    file_data = client_socket.recv(1024)
     with open(file_name, 'wb') as file:
-        file.write(file_data)
+        # file.write(file_data)
+        n += 1
+        i = 0
+        while file_data:                
+            file.write(file_data)
+            print("file_data {0}".format(i))
+            i += 1
+            file_data = connection.recv(1024)
     print(f"File received and saved as {file_name}")  
     
 
@@ -112,7 +121,8 @@ def playback(file_name, cmd):
         cap.release()
 
     cap = cv2.VideoCapture(file_name)
-
+    file_name, file_type = os.path.splitext(file_name)
+        
     paused = False
 
     while cap.isOpened():
@@ -125,7 +135,7 @@ def playback(file_name, cmd):
             cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow('Video received', frame)
 
-        cv2.waitKey(25)
+        cv2.waitKey(25) & 0xFF
         if cmd == "Quit":  # Quit if 'q' is pressed
             print("Quitting video")
             break
