@@ -91,10 +91,12 @@ class GUI:
         #------------------build connection-----------------------
 
         # self.hostname, self.ip_address = end_device_client.get_hostname_ip() # uncomment when testing on the same machine
-        self.ip_address = self.client_socket.recv(1024).decode('utf-8')
-        print(self.ip_address)
+        self.ip_address = input("Enter server ip_address: ")
         # self.client_socket.connect(('10.13.214.63', 12345))
         self.client_socket.connect((self.ip_address, 12345))
+
+        self.key = cv2.waitKey(25) & 0xFF
+
     
     def load_images(self):
         for path in self.img_path_list:
@@ -153,6 +155,14 @@ class GUI:
                                cursor="hand2", 
                                command=self.restart_cmd)
         restart_btn.pack(pady=10, padx=10, side=tk.LEFT)
+
+        self.stop_img = ImageTk.PhotoImage(Image.open('assets/stop-img.png').resize((20, 20), Image.LANCZOS))
+        stop_btn = tk.Button(self.btn_frm,
+                               image=self.stop_img, 
+                               text="Stop",
+                               cursor="hand2", 
+                               command=self.stop_cmd)
+        stop_btn.pack(pady=10, padx=10, side=tk.LEFT)
 
     def select_device_ui(self):
         self.frame3 = tk.Frame(self.section1)
@@ -339,7 +349,7 @@ class GUI:
                     file_name, file_type = self.get_filename_ext(file_path)
                     filename_ext = f"{file_name}{file_type}"
 
-                    self.client_socket.sendall(filename_ext.encode('utf-8'))
+                    self.client_socket.sendall(f"Sending {filename_ext}".encode('utf-8'))
                     self.send_to_server(file_path, filename_ext) 
 
                     # send file_name so the server can operate save_file()
@@ -364,8 +374,6 @@ class GUI:
 
     def send_to_server(self, file_path, filename_ext):
         try:
-            # client_socket.connect(('192.168.1.6', 9999))
-            # client_socket.connect(('10.13.229.231', 9999))
 
             with open(file_path, 'rb') as file:
                 file_data = file.read()
@@ -472,8 +480,9 @@ class GUI:
         file_path = 0 # will connect the camera
 
     def stop_cmd(self):
-        gui_client.playback_ctrl('q')
-        self.playing = False
+        message = "Quit"
+        print(message)
+        self.client_socket.sendall(message.encode('utf-8'))
             
     def connect_device(self, event=None):
         selection = self.device_list.curselection()
@@ -492,7 +501,7 @@ class GUI:
     def media_control(self):
         try:
             # send filename. server looks for the file and cv2.VideoCapture
-            self.client_socket.sendall(self.filename_ext.encode('utf-8'))
+            self.client_socket.sendall(f"Playing {self.filename_ext}".encode('utf-8'))
             
             cap = cv2.VideoCapture(self.sending_path)
             paused = False
@@ -505,13 +514,13 @@ class GUI:
                         break
         
                     cv2.imshow('Video sending', frame)
-                key = cv2.waitKey(25) & 0xFF
-                if key == ord('q'):
+                # key = cv2.waitKey(25) & 0xFF
+                if self.key == ord('q'):
                     message = "Quit"
                     print(message)
                     self.client_socket.sendall(message.encode('utf-8'))
                     break
-                elif key == ord('p'):
+                elif self.key == ord('p'):
                     if paused:
                         paused = False
                         message = "Play"
@@ -520,9 +529,6 @@ class GUI:
                         message = "Pause"
                         print(message)
                         cv2.waitKey(-1) # wait until any key is pressed
-                        if key == ord(cmd):  # 'p' Pause or resume the video
-                            paused = False
-                            message = "Play"
                     self.client_socket.sendall(message.encode('utf-8'))
 
             # Release resources
