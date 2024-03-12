@@ -34,7 +34,7 @@ def start_end_device_server():
     print('Connected to client:', addr)
 
     black_scrn = threading.Thread(target=black_screen, args=())
-    playback_scrn = threading.Thread(target=playback, args=())
+    # playback_scrn = threading.Thread(target=playback, args=(file_name, cmd))
 
     black_scrn.start()
     
