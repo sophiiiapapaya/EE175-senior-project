@@ -34,8 +34,6 @@ def start_end_device_server():
     print('Connected to client:', addr)
 
     black_scrn = threading.Thread(target=black_screen, args=())
-    # playback_scrn = threading.Thread(target=playback, args=(file_name, cmd))
-
     black_scrn.start()
     
     cap_flag = False # shows cv2.VideoCapture()
@@ -109,8 +107,8 @@ def save_file(file_data, file_name):
     
 
 def black_screen():
-    bg = cv2.imread('assets/black.jpg')
-    # frame = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
+    # bg = cv2.imread('assets/black.jpg')
+    bg = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
     cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     cv2.imshow('Black screen', bg)
