@@ -507,8 +507,8 @@ class GUI:
             message = f"Playing {self.filename_ext}"
             self.client_socket.sendall(message.encode('utf-8'))
             msg = message.split()
-            print(msg[0])
-            print(msg[1])
+            print(f"msg[0]:{msg[0]}")
+            print(f"msg[1]:{msg[1]}")
             
             cap = cv2.VideoCapture(self.sending_path)
             paused = False

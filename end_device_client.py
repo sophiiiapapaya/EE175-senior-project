@@ -33,18 +33,14 @@ def start_end_device_server():
     client_socket, addr = server_socket.accept() # Listening from the same client
     print('Connected to client:', addr)
 
+    black_screen()
     while True:
-        black_screen()
-        
         message = receive_message(client_socket) # get filename from client
 
         msg = message.split() # array
-        print(msg[0])
+        # print(msg[0])
         if msg[0] == "Sending":
-            # if not message is type file data:
             file_data = receive_file(client_socket)        
-    
-            # elif message is type file_name:
     
             # Save received file.
             file_name = msg[1]
@@ -52,14 +48,12 @@ def start_end_device_server():
         
         # message = receive_message(client_socket) # get filename from client
 
-        elif msg[0] == "Playing":
-            file_name = msg[1]
-            playback(file_name, cmd)
+        if msg[0] == "Playing" or msg[0] == "Quit" or msg[0] == "Play" or msg[0] == "Pause":
+            if msg[0] == "Playing":
+                file_name = msg[1]
 
-        cmd = message
-        if cmd == "Quit":
-            print(cmd)
-            break
+            cmd = msg[0]
+            playback(file_name, cmd)
 
     cv2.destroyAllWindows()
     client_socket.close()
@@ -103,7 +97,7 @@ def save_file(file_data, file_name):
 
 def black_screen():
     frame = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
-    # cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
+    cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     cv2.imshow('Black screen', frame)
     print("Black screen on")
@@ -124,16 +118,28 @@ def playback(file_name, cmd):
             cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow('Video received', frame)
                 
-        key = cv2.waitKey(25)
-        # try: if (key == ord(cmd)) and (cmd == 'q'):
-        if key == ord('q'):  # Quit if 'q' is pressed
+        # key = cv2.waitKey(25)
+        # # try: if (key == ord(cmd)) and (cmd == 'q'):
+        # if key == ord('q'):  # Quit if 'q' is pressed
+        #     break
+        # elif key == ord('p'):  # Pause if 'p' is pressed
+        #     print("Pausing video.")
+        #     cv2.waitKey(-1)  # Wait until any key is pressed
+        #     paused = True
+        #     print("Video paused.")
+        # elif key == ord('r'):  # Resume if 'r' is pressed
+        #     paused = False
+        #     print("Resuming video.")
+
+        cv2.waitKey(25)
+        if cmd == "Quit":  # Quit if 'q' is pressed
             break
-        elif key == ord('p'):  # Pause if 'p' is pressed
+        elif cmd == "Pause":  # Pause if 'p' is pressed
             print("Pausing video.")
             cv2.waitKey(-1)  # Wait until any key is pressed
             paused = True
             print("Video paused.")
-        elif key == ord('r'):  # Resume if 'r' is pressed
+        elif cmd == "Play":  # Resume if 'r' is pressed
             paused = False
             print("Resuming video.")
                 
