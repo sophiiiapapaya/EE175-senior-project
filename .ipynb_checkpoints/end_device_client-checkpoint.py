@@ -34,6 +34,7 @@ def start_end_device_server():
     print('Connected to client:', addr)
 
     black_scrn = threading.Thread(target=black_screen, args=())
+    black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
     black_scrn.start()
     
     cap_flag = False # shows cv2.VideoCapture()
