@@ -17,7 +17,7 @@ def get_hostname_ip(server_socket):
         return "Unable to resolve hostname and IP address."
         
 def start_end_device_server():
-    global cap_flag, socket_flag
+    global cap_flag, stop_thread
     server_ip = subprocess.run(['hostname', '-I'], capture_output=True, text=True).stdout.strip()
     print(server_ip)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -37,7 +37,7 @@ def start_end_device_server():
         
         client_socket.sendall(f"Connected to {server_ip}c".encode('utf-8'))
         
-        socket_flag = True
+        stop_thread = False
         
         cap_flag = False # shows cv2.VideoCapture()
         
@@ -69,7 +69,7 @@ def start_end_device_server():
         client_socket.close()
         print("lose connection")
         time.sleep(1)
-        socket_flag = False
+        stop_thread = True
         black_scrn.join()
         cv2.destroyAllWindows()
 
@@ -118,7 +118,7 @@ def save_file(file_data, file_name):
     
 
 def black_screen():
-    global socket_flag
+    global stop_thread
     while True:
         bg = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
         # cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
@@ -129,7 +129,7 @@ def black_screen():
         # (this is necessary to avoid Python kernel form crashing) 
         cv2.waitKey(0) 
         
-        if not socket_flag:
+        if stop_thread:
             cv2.destroyWindow('Black screen')
             break
 
