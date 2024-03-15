@@ -5,7 +5,7 @@ import struct
 import pickle
 import numpy as np
 import os, subprocess
-import threading
+import threading, time
     
 def get_hostname_ip(server_socket):
     try:
@@ -17,7 +17,7 @@ def get_hostname_ip(server_socket):
         return "Unable to resolve hostname and IP address."
         
 def start_end_device_server():
-    global cap_flag, socket_flag
+    global cap_flag, stop_thread
     server_ip = subprocess.run(['hostname', '-I'], capture_output=True, text=True).stdout.strip()
     print(server_ip)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -35,20 +35,29 @@ def start_end_device_server():
         client_socket, addr = server_socket.accept() # Listening from the same client
         print('Connected to client:', addr)
         
-        client_socket.sendall(f"Connected to {server_ip}".encode('utf-8'))
-        
-        socket_flag = True
-        black_scrn = threading.Thread(target=black_screen, args=())
-        # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
-        black_scrn.start()
+        client_socket.sendall(f"Connected to {server_ip}c".encode('utf-8'))
         
         cap_flag = False # shows cv2.VideoCapture()
         
-        while client_socket: # while a client socket is accepted
+        while True: # while a client socket is accepted
+            stop_thread = False
+            black_scrn = threading.Thread(target=black_screen, args=())
+            # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
+            black_scrn.start()
+        
             message = receive_message(client_socket) # get filename from client
+            if not message:
+                time.sleep(1)
+                stop_thread = True
+                black_scrn.join()
+                cv2.destroyAllWindows()
+                client_socket.close()
+                print("lose connection")
+                break
     
             msg = message.split() # array
             # print(msg[0])
+                
             if msg[0] == "Sending":
                 # Save received file.
                 file_name = msg[1]
@@ -58,16 +67,20 @@ def start_end_device_server():
                 recv_msg = f"{file_name} saved"
                 client_socket.sendall(recv_msg.encode('utf-8'))
             
-            if msg[0] == "Playing" or msg[0] == "Quit" or msg[0] == "Play" or msg[0] == "Pause":
+            elif msg[0] == "Playing" or msg[0] == "Quit" or msg[0] == "Play" or msg[0] == "Pause":
                 if msg[0] == "Playing":
                     file_name = msg[1]
     
                 cmd = msg[0]
                 playback(file_name, cmd)
-    
-        client_socket.close()
-        socket_flag = False
+
+        print("exiting")
+        time.sleep(1)
+        stop_thread = True
+        black_scrn.join()
         cv2.destroyAllWindows()
+        client_socket.close()
+        print("lose connection")
 
     server_socket.close()
 
@@ -114,19 +127,20 @@ def save_file(file_data, file_name):
     
 
 def black_screen():
-    global socket_flag
+    global stop_thread
     while True:
         bg = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
-        # cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
-        # cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         cv2.imshow('Black screen', bg)
         print("Black screen on")
         # waits for user to press any key 
         # (this is necessary to avoid Python kernel form crashing) 
         cv2.waitKey(0) 
         
-        if not socket_flag:
+        if stop_thread:
             cv2.destroyWindow('Black screen')
+            print("destroyed window")
             break
 
 
