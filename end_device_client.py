@@ -38,13 +38,14 @@ def start_end_device_server():
         client_socket.sendall(f"Connected to {server_ip}c".encode('utf-8'))
         
         socket_flag = True
-        black_scrn = threading.Thread(target=black_screen, args=())
-        # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
-        black_scrn.start()
         
         cap_flag = False # shows cv2.VideoCapture()
         
         while client_socket: # while a client socket is accepted
+            black_scrn = threading.Thread(target=black_screen, args=())
+            # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
+            black_scrn.start()
+        
             message = receive_message(client_socket) # get filename from client
     
             msg = message.split() # array
