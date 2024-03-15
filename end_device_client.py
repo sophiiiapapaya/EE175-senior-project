@@ -51,7 +51,12 @@ def start_end_device_server():
             # print(msg[0])
             if not msg:
                 print("exiting")
-                
+                time.sleep(1)
+                stop_thread = True
+                black_scrn.join()
+                cv2.destroyAllWindows()
+                client_socket.close()
+                print("lose connection")
                 break
                 
             if msg[0] == "Sending":
@@ -73,9 +78,9 @@ def start_end_device_server():
         time.sleep(1)
         stop_thread = True
         black_scrn.join()
+        cv2.destroyAllWindows()
         client_socket.close()
         print("lose connection")
-        cv2.destroyAllWindows()
 
     server_socket.close()
 
