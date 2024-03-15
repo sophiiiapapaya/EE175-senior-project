@@ -46,10 +46,7 @@ def start_end_device_server():
             black_scrn.start()
         
             message = receive_message(client_socket) # get filename from client
-    
-            msg = message.split() # array
-            # print(msg[0])
-            if not msg:
+            if not message:
                 time.sleep(1)
                 stop_thread = True
                 black_scrn.join()
@@ -57,6 +54,9 @@ def start_end_device_server():
                 client_socket.close()
                 print("lose connection")
                 break
+    
+            msg = message.split() # array
+            # print(msg[0])
                 
             if msg[0] == "Sending":
                 # Save received file.
