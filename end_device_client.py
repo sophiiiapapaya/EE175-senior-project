@@ -36,12 +36,11 @@ def start_end_device_server():
         print('Connected to client:', addr)
         
         cap_flag = False # shows cv2.VideoCapture()
-        
+        socket_flag = True # destroy window when it turns to false
         while True: # while a socket is accepted
             black_scrn = threading.Thread(target=black_screen, args=())
             # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
             black_scrn.start()
-            socket_flag = True # destroy window when it turns to false
             
             message = receive_message(client_socket) # get filename from client
     
