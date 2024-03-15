@@ -100,6 +100,7 @@ def start_end_device_server():
                     time.sleep(1)
                     stop_thread = True
                     black_scrn.join()
+                    print(f"stop_thread: {stop_thread}")
     
                 cmd = msg[0]
                 playback(file_name, cmd)
@@ -167,6 +168,7 @@ def run_thread():
         print("Black screen on")
         if stop_thread:
             cv2.destroyWindow('Black screen')
+            print("destroyed window")
             break
 
 def playback(file_name, cmd):
