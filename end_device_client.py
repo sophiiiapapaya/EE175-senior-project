@@ -97,11 +97,11 @@ def start_end_device_server():
             if msg[0] == "Playing" or msg[0] == "Quit" or msg[0] == "Play" or msg[0] == "Pause":
                 if msg[0] == "Playing":
                     file_name = msg[1]
-                    time.sleep(1)
+                    time.sleep(3)
                     stop_thread = True
-                    black_scrn.join()
                     print(f"stop_thread: {stop_thread}")
-    
+                    black_scrn.join()
+                    
                 cmd = msg[0]
                 playback(file_name, cmd)
 
@@ -191,9 +191,6 @@ def playback(file_name, cmd):
             cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
             cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow('Video received', frame)
-
-        if stop_thread:
-            break
             
         # cv2.waitKey(1) & 0xFF 
         if cmd == "Quit":  # Quit if 'q' is pressed
