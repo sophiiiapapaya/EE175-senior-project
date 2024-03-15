@@ -73,7 +73,7 @@ def start_end_device_server():
         # wait and accept new connection
         client_socket, addr = server_socket.accept() 
         print('Connected to client:', addr)
-        client_socket.sendall("Connected to {server_ip}".encode('utf-8'))
+        client_socket.sendall(f"Connected to {server_ip}".encode('utf-8'))
         
         while True: # while a socket is accepted
             stop_thread = False # destroy window when it turns to false
@@ -103,7 +103,10 @@ def start_end_device_server():
     
                 cmd = msg[0]
                 playback(file_name, cmd)
-                
+
+        time.sleep(1)
+        stop_thread = True
+        black_scrn.join()
         client_socket.close()
         cv2.destroyAllWindows()
 

@@ -500,6 +500,9 @@ class GUI:
         
         status_txt = f"Connected to \"{ip_address}\". "
         self.device_status.configure(text=status_txt)
+
+        message = self.client_socket.recv(1024).decode('utf-8')
+        print(message)
             
     def media_control(self):
         try:
