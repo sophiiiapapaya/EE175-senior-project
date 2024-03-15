@@ -49,6 +49,8 @@ def start_end_device_server():
     
             msg = message.split() # array
             # print(msg[0])
+            if not msg:
+                break
             if msg[0] == "Sending":
                 # Save received file.
                 file_name = msg[1]
