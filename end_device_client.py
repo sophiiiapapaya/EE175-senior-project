@@ -131,6 +131,7 @@ def black_screen():
         
         if stop_thread:
             cv2.destroyWindow('Black screen')
+            print("destroyed window")
             break
 
 
