@@ -162,14 +162,16 @@ def run_thread():
         # cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
         # cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         cv2.imshow('Black screen', bg)
-        # waits for user to press any key 
-        # (this is necessary to avoid Python kernel form crashing) 
-        cv2.waitKey(0) 
         print("Black screen on")
         if stop_thread:
             cv2.destroyWindow('Black screen')
             print("destroyed window")
             break
+            
+        # waits for user to press any key 
+        # (this is necessary to avoid Python kernel form crashing) 
+        cv2.waitKey(0) 
+        
 
 def playback(file_name, cmd):
     global cap_flag, stop_thread
