@@ -146,6 +146,7 @@ def playback(file_name, cmd):
             cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow('Video received', frame)
 
+        cv2.waitKey(1) & 0xFF 
         if cmd == "Quit":  # Quit if 'q' is pressed
             print("Quitting video")
             break
@@ -157,8 +158,8 @@ def playback(file_name, cmd):
         elif cmd == "Play":  # Resume if 'r' is pressed
             paused = False
             print("Resuming video.")
-        else:
-            cv2.waitKey(25) & 0xFF 
+
+        # cv2.waitKey(1) & 0xFF 
 
     cap_flag = False 
     cap.release()
