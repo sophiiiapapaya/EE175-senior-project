@@ -17,7 +17,7 @@ def get_hostname_ip(server_socket):
         return "Unable to resolve hostname and IP address."
         
 def start_end_device_server():
-    global cap_flag, socket_flag
+    global cap_flag, stop_thread
     server_ip = subprocess.run(['hostname', '-I'], capture_output=True, text=True).stdout.strip()
     print(server_ip)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -31,16 +31,15 @@ def start_end_device_server():
     print(f"End device server listening on {server_ip}:{server_port}")
 
     while True: # while listening for connection
+        cap_flag = False # shows cv2.VideoCapture()
+        stop_thread = False # destroy window when it turns to false
+        black_scrn = threading.Thread(target=black_screen, args=())
+        # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
+        black_scrn.start()
         # wait and accept new connection
         client_socket, addr = server_socket.accept() 
         print('Connected to client:', addr)
-        
-        cap_flag = False # shows cv2.VideoCapture()
-        socket_flag = True # destroy window when it turns to false
         while True: # while a socket is accepted
-            black_scrn = threading.Thread(target=black_screen, args=())
-            # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
-            black_scrn.start()
             
             message = receive_message(client_socket) # get filename from client
     
@@ -63,7 +62,8 @@ def start_end_device_server():
                 playback(file_name, cmd)
     
         client_socket.close()
-        socket_flag = False
+        stop_thread = True
+        black_scrn.join()
         cv2.destroyAllWindows()
 
     server_socket.close()
@@ -111,18 +111,19 @@ def save_file(file_data, file_name):
     
 
 def black_screen():
-    global socket_flag
-    while socket_flag:
-        bg = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
-        cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
-        cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-        cv2.imshow('Black screen', bg)
-        # waits for user to press any key 
-        # (this is necessary to avoid Python kernel form crashing) 
-        cv2.waitKey(0) 
-        print("Black screen on")
-        
-    cv2.destroyWindow('Black screen')
+    global stop_thread
+    bg = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
+    cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
+    cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    cv2.imshow('Black screen', bg)
+    # waits for user to press any key 
+    # (this is necessary to avoid Python kernel form crashing) 
+    cv2.waitKey(0) 
+    print("Black screen on")
+    if stop_thread:
+        cv2.destroyWindow('Black screen')
+        break
+    
 
 
 def playback(file_name, cmd):
