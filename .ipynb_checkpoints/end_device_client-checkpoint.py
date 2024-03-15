@@ -37,8 +37,6 @@ def start_end_device_server():
         
         client_socket.sendall(f"Connected to {server_ip}c".encode('utf-8'))
         
-        
-        
         cap_flag = False # shows cv2.VideoCapture()
         
         while True: # while a client socket is accepted
@@ -63,6 +61,10 @@ def start_end_device_server():
             if msg[0] == "Playing" or msg[0] == "Quit" or msg[0] == "Play" or msg[0] == "Pause":
                 if msg[0] == "Playing":
                     file_name = msg[1]
+                    time.sleep(3)
+                    stop_thread = True
+                    print(f"stop_thread: {stop_thread}")
+                    black_scrn.join()
     
                 cmd = msg[0]
                 playback(file_name, cmd)
