@@ -130,8 +130,8 @@ def black_screen():
     global stop_thread
     while True:
         bg = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
-        # cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
-        # cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         cv2.imshow('Black screen', bg)
         print("Black screen on")
         # waits for user to press any key 
