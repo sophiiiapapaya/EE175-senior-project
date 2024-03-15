@@ -5,45 +5,8 @@ import struct
 import pickle
 import numpy as np
 import os, subprocess
-import threading, time
-
-# class thread_with_exception(threading.Thread):
-#     def __init__(self, name):
-#         threading.Thread.__init__(self)
-#         self.name = name
-             
-#     def run(self):
- 
-#         # target function of the thread class
-#         try:
-#             while True:
-#                 print('running ' + self.name)
-#         finally:
-#             print('ended')
-          
-#     def get_id(self):
- 
-#         # returns id of the respective thread
-#         if hasattr(self, '_thread_id'):
-#             return self._thread_id
-#         for id, thread in threading._active.items():
-#             if thread is self:
-#                 return id
-  
-#     def raise_exception(self):
-#         thread_id = self.get_id()
-#         res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id,
-#               ctypes.py_object(SystemExit))
-#         if res > 1:
-#             ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
-#             print('Exception raise failure')
-      
-# t1 = thread_with_exception('Black screen')
-# t1.start()
-# time.sleep(2)
-# t1.raise_exception()
-# t1.join()
-
+import threading
+    
 def get_hostname_ip(server_socket):
     try:
         hostname = socket.gethostname()
@@ -54,7 +17,7 @@ def get_hostname_ip(server_socket):
         return "Unable to resolve hostname and IP address."
         
 def start_end_device_server():
-    global cap_flag, stop_thread
+    global cap_flag, socket_flag
     server_ip = subprocess.run(['hostname', '-I'], capture_output=True, text=True).stdout.strip()
     print(server_ip)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -68,22 +31,18 @@ def start_end_device_server():
     print(f"End device server listening on {server_ip}:{server_port}")
 
     while True: # while listening for connection
+    
+        client_socket, addr = server_socket.accept() # Listening from the same client
+        print('Connected to client:', addr)
+        
         socket_flag = True
         black_scrn = threading.Thread(target=black_screen, args=())
-        black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
+        # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
         black_scrn.start()
-                
-        # wait and accept new connection
-        client_socket, addr = server_socket.accept() 
-        print('Connected to client:', addr)
-        client_socket.sendall(f"Connected to {server_ip}".encode('utf-8'))
         
-        while True: # while a socket is accepted
-            stop_thread = False # destroy window when it turns to false
-            black_scrn = threading.Thread(target=run_thread, args=())
-            # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
-            black_scrn.start()
+        cap_flag = False # shows cv2.VideoCapture()
         
+        while client_socket: # while a client socket is accepted
             message = receive_message(client_socket) # get filename from client
     
             msg = message.split() # array
@@ -100,18 +59,12 @@ def start_end_device_server():
             if msg[0] == "Playing" or msg[0] == "Quit" or msg[0] == "Play" or msg[0] == "Pause":
                 if msg[0] == "Playing":
                     file_name = msg[1]
-                    time.sleep(3)
-                    stop_thread = True
-                    print(f"stop_thread: {stop_thread}")
-                    black_scrn.join()
-                    
+    
                 cmd = msg[0]
                 playback(file_name, cmd)
-
-        time.sleep(1)
-        stop_thread = True
-        black_scrn.join()
+    
         client_socket.close()
+        socket_flag = False
         cv2.destroyAllWindows()
 
     server_socket.close()
@@ -158,26 +111,24 @@ def save_file(file_data, file_name):
     print(f"File received and saved as {file_name}")  
     
 
-def run_thread():
-    global stop_thread
+def black_screen():
+    global socket_flag
     while True:
         bg = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
-        # cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
-        # cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         cv2.imshow('Black screen', bg)
-        print("Black screen on")
-        if stop_thread:
-            cv2.destroyWindow('Black screen')
-            print("destroyed window")
-            break
-            
         # waits for user to press any key 
         # (this is necessary to avoid Python kernel form crashing) 
         cv2.waitKey(0) 
-        
+        print("Black screen on")
+        if not socket_flag:
+            cv2.destroyWindow('Black screen')
+            break
+
 
 def playback(file_name, cmd):
-    global cap_flag, stop_thread
+    global cap_flag
     paused = False
     # Play the received media in fullscreen mode using OpenCV
     if cap_flag:
@@ -196,8 +147,8 @@ def playback(file_name, cmd):
             cv2.namedWindow('Video received', cv2.WND_PROP_FULLSCREEN)
             cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow('Video received', frame)
-            
-        # cv2.waitKey(1) & 0xFF 
+
+        cv2.waitKey(25) & 0xFF
         if cmd == "Quit":  # Quit if 'q' is pressed
             print("Quitting video")
             break
@@ -209,11 +160,6 @@ def playback(file_name, cmd):
         elif cmd == "Play":  # Resume if 'r' is pressed
             paused = False
             print("Resuming video.")
-
-        key = cv2.waitKey(1) & 0xFF 
-        if key == orq('q'):  # Quit if 'q' is pressed
-            print("Quitting video")
-            break
 
     cap_flag = False 
     cap.release()
