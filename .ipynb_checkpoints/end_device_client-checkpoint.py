@@ -5,7 +5,7 @@ import struct
 import pickle
 import numpy as np
 import os, subprocess
-import threading
+import threading, time
     
 def get_hostname_ip(server_socket):
     try:
@@ -35,7 +35,7 @@ def start_end_device_server():
         client_socket, addr = server_socket.accept() # Listening from the same client
         print('Connected to client:', addr)
         
-        client_socket.sendall(f"Connected to {server_ip}".encode('utf-8'))
+        client_socket.sendall(f"Connected to {server_ip}c".encode('utf-8'))
         
         socket_flag = True
         black_scrn = threading.Thread(target=black_screen, args=())
@@ -66,7 +66,10 @@ def start_end_device_server():
                 playback(file_name, cmd)
     
         client_socket.close()
+        print("lose connection")
+        time.sleep(1)
         socket_flag = False
+        black_scrn.join()
         cv2.destroyAllWindows()
 
     server_socket.close()
