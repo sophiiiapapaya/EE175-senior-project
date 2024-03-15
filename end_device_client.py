@@ -39,6 +39,7 @@ def start_end_device_server():
         # wait and accept new connection
         client_socket, addr = server_socket.accept() 
         print('Connected to client:', addr)
+        client_socket.sendall(f"Connected to {server_ip}".encode('utf-8'))
         while True: # while a socket is accepted
             
             message = receive_message(client_socket) # get filename from client

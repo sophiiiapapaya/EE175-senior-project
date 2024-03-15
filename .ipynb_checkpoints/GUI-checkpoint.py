@@ -180,7 +180,8 @@ class GUI:
                                   highlightthickness=0, # remove listbox border
                                   relief=tk.FLAT, # Default: SUNKEN
                                   selectbackground="darkviolet",
-                                  cursor="hand2") 
+                                  cursor="hand2", 
+                                  height=2) 
         self.device_list.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         # self.device_list.bind('<<ListboxSelect>>',self.connect_cmd)
         ip_address = "10.13.215.90"
