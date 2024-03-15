@@ -169,28 +169,38 @@ class GUI:
         self.frame3 = tk.Frame(self.section1)
         self.frame3.pack(pady=20, padx=20, side=tk.TOP, expand=True)
 
-        self.select_device_title = tk.Label(self.frame3, text="Enter the IP address and click connect.")
+        self.select_device_title = tk.Label(self.frame3, text="Select device or")
         self.select_device_title.pack(padx=20, side=tk.TOP, anchor='nw')
 
         self.device_list_frm = tk.Frame(self.frame3)
         self.device_list_frm.pack(padx=20, side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        # Listbox properties
-        self.device_list = tk.Entry(self.device_list_frm, 
-                                  textvariable = self.device_ip,
+        self.device_list = tk.Listbox(self.device_list_frm, 
                                   borderwidth=0, 
                                   highlightthickness=0, # remove listbox border
                                   relief=tk.FLAT, # Default: SUNKEN
                                   selectbackground="darkviolet",
                                   cursor="hand2") 
-        self.device_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        # self.device_list.bind('<<ListboxSelect>>',self.connect_device)
-        # self.device_list.insert(tk.END, self.end_device_hostname)
+        self.device_list.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        # self.device_list.bind('<<ListboxSelect>>',self.connect_cmd)
+        ip_address = "10.13.215.90"
+        self.device_list.insert(tk.END, ip_address)
 
         # self.device_list_scroll = ttk.Scrollbar(self.device_list_frm, style="Vertical.TScrollbar") # Define scrollbar
         # self.device_list_scroll.pack(side=tk.RIGHT, fill=tk.Y) 
         # self.device_list.config(yscrollcommand=self.device_list_scroll.set)  # Link scrollbar with listbox
         # self.device_list_scroll.config(command=self.device_list.yview) # Scrollability
+
+        self.entry_label = tk.Label(self.device_list_frm, text="Enter the IP address and click connect.")
+        self.entry_label.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        
+        self.device_entry = tk.Entry(self.device_list_frm, 
+                                  textvariable = self.device_ip,
+                                  borderwidth=0, 
+                                  highlightthickness=0, # remove listbox border
+                                  relief=tk.FLAT, # Default: SUNKEN
+                                  selectbackground="darkviolet",) 
+        self.device_entry.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self.conn_device_btn = customtkinter.CTkButton(self.frame3, 
                                                         text="Connect", 
@@ -468,17 +478,25 @@ class GUI:
         print(message)
         self.client_socket.sendall(message.encode('utf-8'))
             
-    # def connect_device(self, event=None):
-    #     selection = self.device_list.curselection()
-    #     if selection:
-    #         index = selection[0]
-    #         device = self.device_list.get(index)            
-    #         status_txt = f"Device selected: \"{self.hostname} ({self.ip_address})\". \nClick button to connect."
-    #         self.device_status.configure(text=status_txt)
+    def connect_device(self, event=None):
+        selection = self.device_list.curselection()
+        if selection:
+            index = selection[0]
+            device = self.device_list.get(index)            
+            status_txt = f"Device selected: \"{self.ip_address}\". \nClick button to connect."
+            self.device_status.configure(text=status_txt)
 
     def connect_cmd(self):
-        ip_address = self.device_ip.get()
+        if self.device_list.curselection():
+            index = self.device_list.curselection()[0]
+            ip_address = self.device_list.get(index)            
+            # status_txt = f"Device selected: \"{ip_address}\". \nClick button to connect."
+            # self.device_status.configure(text=status_txt)
+        else:
+            ip_address = self.device_ip.get()
+        print(f"connecting to {ip_address}")
         self.client_socket.connect((ip_address, 12345))
+        
         status_txt = f"Connected to \"{ip_address}\". "
         self.device_status.configure(text=status_txt)
             

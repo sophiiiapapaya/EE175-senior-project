@@ -125,8 +125,6 @@ def run_thread():
         if stop_thread:
             cv2.destroyWindow('Black screen')
             break
-    
-
 
 def playback(file_name, cmd):
     global cap_flag, stop_thread
