@@ -129,7 +129,7 @@ def run_thread():
 
 
 def playback(file_name, cmd):
-    global cap_flag
+    global cap_flag, stop_thread
     paused = False
     # Play the received media in fullscreen mode using OpenCV
     if cap_flag:
@@ -149,7 +149,10 @@ def playback(file_name, cmd):
             cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow('Video received', frame)
 
-        cv2.waitKey(1) & 0xFF 
+        if stop_thread:
+            break
+            
+        # cv2.waitKey(1) & 0xFF 
         if cmd == "Quit":  # Quit if 'q' is pressed
             print("Quitting video")
             break
@@ -162,7 +165,7 @@ def playback(file_name, cmd):
             paused = False
             print("Resuming video.")
 
-        # cv2.waitKey(1) & 0xFF 
+        cv2.waitKey(1) & 0xFF 
 
     cap_flag = False 
     cap.release()
