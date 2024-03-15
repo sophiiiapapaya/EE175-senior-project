@@ -50,7 +50,6 @@ def start_end_device_server():
             msg = message.split() # array
             # print(msg[0])
             if not msg:
-                print("exiting")
                 time.sleep(1)
                 stop_thread = True
                 black_scrn.join()
@@ -74,7 +73,8 @@ def start_end_device_server():
     
                 cmd = msg[0]
                 playback(file_name, cmd)
-    
+
+        print("exiting")
         time.sleep(1)
         stop_thread = True
         black_scrn.join()
