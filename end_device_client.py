@@ -31,18 +31,18 @@ def start_end_device_server():
     print(f"End device server listening on {server_ip}:{server_port}")
 
     while True: # while listening for connection
-    
-        client_socket, addr = server_socket.accept() # Listening from the same client
+        # wait and accept new connection
+        client_socket, addr = server_socket.accept() 
         print('Connected to client:', addr)
-        
-        socket_flag = True
-        black_scrn = threading.Thread(target=black_screen, args=())
-        # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
-        black_scrn.start()
         
         cap_flag = False # shows cv2.VideoCapture()
         
-        while client_socket: # while a client socket is accepted
+        while True: # while a socket is accepted
+            black_scrn = threading.Thread(target=black_screen, args=())
+            # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
+            black_scrn.start()
+            socket_flag = True # destroy window when it turns to false
+            
             message = receive_message(client_socket) # get filename from client
     
             msg = message.split() # array
@@ -147,7 +147,6 @@ def playback(file_name, cmd):
             cv2.setWindowProperty('Video received', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow('Video received', frame)
 
-        cv2.waitKey(25) & 0xFF
         if cmd == "Quit":  # Quit if 'q' is pressed
             print("Quitting video")
             break
@@ -159,6 +158,8 @@ def playback(file_name, cmd):
         elif cmd == "Play":  # Resume if 'r' is pressed
             paused = False
             print("Resuming video.")
+        else:
+            cv2.waitKey(25) & 0xFF 
 
     cap_flag = False 
     cap.release()
