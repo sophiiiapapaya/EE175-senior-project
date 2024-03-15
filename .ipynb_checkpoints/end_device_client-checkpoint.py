@@ -6,7 +6,44 @@ import pickle
 import numpy as np
 import os, subprocess
 import threading
-    
+
+# class thread_with_exception(threading.Thread):
+#     def __init__(self, name):
+#         threading.Thread.__init__(self)
+#         self.name = name
+             
+#     def run(self):
+ 
+#         # target function of the thread class
+#         try:
+#             while True:
+#                 print('running ' + self.name)
+#         finally:
+#             print('ended')
+          
+#     def get_id(self):
+ 
+#         # returns id of the respective thread
+#         if hasattr(self, '_thread_id'):
+#             return self._thread_id
+#         for id, thread in threading._active.items():
+#             if thread is self:
+#                 return id
+  
+#     def raise_exception(self):
+#         thread_id = self.get_id()
+#         res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id,
+#               ctypes.py_object(SystemExit))
+#         if res > 1:
+#             ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
+#             print('Exception raise failure')
+      
+# t1 = thread_with_exception('Black screen')
+# t1.start()
+# time.sleep(2)
+# t1.raise_exception()
+# t1.join()
+
 def get_hostname_ip(server_socket):
     try:
         hostname = socket.gethostname()
@@ -32,16 +69,18 @@ def start_end_device_server():
 
     while True: # while listening for connection
         cap_flag = False # shows cv2.VideoCapture()
-        stop_thread = False # destroy window when it turns to false
-        black_scrn = threading.Thread(target=run_thread, args=())
-        # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
-        black_scrn.start()
+        
         # wait and accept new connection
         client_socket, addr = server_socket.accept() 
         print('Connected to client:', addr)
-        client_socket.sendall(f"Connected to {server_ip}".encode('utf-8'))
+        client_socket.sendall("Connected to {server_ip}".encode('utf-8'))
+        
         while True: # while a socket is accepted
-            
+            stop_thread = False # destroy window when it turns to false
+            black_scrn = threading.Thread(target=run_thread, args=())
+            # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
+            black_scrn.start()
+        
             message = receive_message(client_socket) # get filename from client
     
             msg = message.split() # array
@@ -58,14 +97,14 @@ def start_end_device_server():
             if msg[0] == "Playing" or msg[0] == "Quit" or msg[0] == "Play" or msg[0] == "Pause":
                 if msg[0] == "Playing":
                     file_name = msg[1]
+                    time.sleep(1)
+                    stop_thread = True
+                    black_scrn.join()
     
                 cmd = msg[0]
                 playback(file_name, cmd)
-    
+                
         client_socket.close()
-        time.sleep(1)
-        stop_thread = True
-        black_scrn.join()
         cv2.destroyAllWindows()
 
     server_socket.close()
@@ -164,7 +203,10 @@ def playback(file_name, cmd):
             paused = False
             print("Resuming video.")
 
-        cv2.waitKey(1) & 0xFF 
+        key = cv2.waitKey(1) & 0xFF 
+        if key == orq('q'):  # Quit if 'q' is pressed
+            print("Quitting video")
+            break
 
     cap_flag = False 
     cap.release()
