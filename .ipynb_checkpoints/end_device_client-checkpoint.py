@@ -50,7 +50,10 @@ def start_end_device_server():
             msg = message.split() # array
             # print(msg[0])
             if not msg:
+                print("exiting")
+                
                 break
+                
             if msg[0] == "Sending":
                 # Save received file.
                 file_name = msg[1]
@@ -66,9 +69,6 @@ def start_end_device_server():
     
                 cmd = msg[0]
                 playback(file_name, cmd)
-
-            else:
-                break
     
         time.sleep(1)
         stop_thread = True
