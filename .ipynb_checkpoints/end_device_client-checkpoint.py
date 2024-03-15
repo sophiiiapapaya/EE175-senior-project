@@ -35,6 +35,8 @@ def start_end_device_server():
         client_socket, addr = server_socket.accept() # Listening from the same client
         print('Connected to client:', addr)
         
+        client_socket.sendall(f"Connected to {server_ip}".encode('utf-8'))
+        
         socket_flag = True
         black_scrn = threading.Thread(target=black_screen, args=())
         # black_scrn.daemon = True # A process will exit if only daemon threads are running (or if no threads are running).
@@ -115,13 +117,14 @@ def black_screen():
     global socket_flag
     while True:
         bg = np.zeros((720, 1280, 3), np.uint8)  # Black screen frame
-        cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
-        cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        # cv2.namedWindow('Black screen', cv2.WND_PROP_FULLSCREEN)
+        # cv2.setWindowProperty('Black screen', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         cv2.imshow('Black screen', bg)
+        print("Black screen on")
         # waits for user to press any key 
         # (this is necessary to avoid Python kernel form crashing) 
         cv2.waitKey(0) 
-        print("Black screen on")
+        
         if not socket_flag:
             cv2.destroyWindow('Black screen')
             break
